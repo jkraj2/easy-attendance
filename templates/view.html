@@ -1,1 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance List</title>
+</head>
+<body>
+    <h2>Attendance for {{ date }}</h2>
+    {% if data %}
+    <ul>
+        {% for row in data %}
+        <li>{{ row['Name'] }} - {{ row['Time'] }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/export?date={{ date }}">Download CSV</a>
+    {% else %}
+    <p>No attendance marked yet.</p>
+    {% endif %}
+    <br><br>
+    <a href="/">Go Back</a>
+</body>
+</html>
 
