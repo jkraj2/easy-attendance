@@ -5,6 +5,7 @@ import json
 app = Flask(__name__)
 DATA_FILE = 'attendance_data/data.json'
 
+
 # Ensure file exists
 os.makedirs('attendance_data', exist_ok=True)
 if not os.path.isfile(DATA_FILE):
