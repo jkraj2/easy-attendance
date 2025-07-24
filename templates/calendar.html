@@ -5,10 +5,31 @@
   <title>Attendance Calendar</title>
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
     #calendar {
       max-width: 900px;
-      margin: 40px auto;
+      margin: 0 auto;
+    }
+    #popup {
+      position: fixed;
+      top: 20%;
+      left: 35%;
+      width: 300px;
+      padding: 15px;
+      background: #fff;
+      border: 1px solid #ccc;
+      display: none;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    #popup input, #popup select {
+      width: 100%;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -16,14 +37,67 @@
   <h2>Attendance Calendar</h2>
   <div id='calendar'></div>
 
+  <div id="popup">
+    <label>Name:<br><input type="text" id="name" required></label><br>
+    <label>Status:<br>
+      <select id="status">
+        <option>Present</option>
+        <option>Absent</option>
+        <option>Half Day</option>
+        <option>PL</option>
+        <option>SL</option>
+        <option>Comp-Off</option>
+      </select>
+    </label><br>
+    <label>Note:<br><input type="text" id="note"></label><br>
+    <label>Comp-Off Comment:<br><input type="text" id="comp_off"></label><br>
+    <button onclick="submitAttendance()">Submit</button>
+    <button onclick="document.getElementById('popup').style.display='none'">Cancel</button>
+  </div>
+
   <script>
+    let selectedDate = '';
+
     document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('calendar');
+      const popup = document.getElementById('popup');
+
       const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth'
+        initialView: 'dayGridMonth',
+        dateClick: function (info) {
+          selectedDate = info.dateStr;
+          popup.style.display = 'block';
+        },
+        events: '/events'  // get color-coded attendance entries
       });
+
       calendar.render();
     });
+
+    function submitAttendance() {
+      const name = document.getElementById('name').value.trim();
+      const status = document.getElementById('status').value;
+      const note = document.getElementById('note').value.trim();
+      const comp_off = document.getElementById('comp_off').value.trim();
+
+      if (!name) {
+        alert("Please enter a name.");
+        return;
+      }
+
+      axios.post('/mark', {
+        date: selectedDate,
+        name,
+        status,
+        note,
+        comp_off
+      }).then(() => {
+        document.getElementById('popup').style.display = 'none';
+        location.reload(); // refresh calendar to show new color
+      }).catch(() => {
+        alert("Error saving data.");
+      });
+    }
   </script>
 </body>
 </html>
