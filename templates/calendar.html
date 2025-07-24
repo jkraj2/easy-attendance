@@ -1,12 +1,18 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Calendar Attendance</title>
+  <meta charset="utf-8">
+  <title>Attendance Calendar</title>
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #calendar {
+      max-width: 900px;
+      margin: 0 auto;
+    }
     #popup {
       position: absolute;
       background: #fff;
@@ -14,6 +20,7 @@
       padding: 10px;
       display: none;
       z-index: 10;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
     }
   </style>
 </head>
@@ -21,6 +28,7 @@
   <h2>Attendance Calendar</h2>
   <div id='calendar'></div>
 
+  <!-- Attendance Status Form -->
   <div id="popup">
     <label>Name: <input type="text" id="name"></label><br>
     <label>Status:
@@ -38,41 +46,9 @@
     <button onclick="submitAttendance()">Submit</button>
   </div>
 
+  <!-- JS Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
   <script>
-    let selectedDate = '';
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const calendarEl = document.getElementById('calendar');
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        dateClick: function (info) {
-          selectedDate = info.dateStr;
-          const popup = document.getElementById('popup');
-          popup.style.left = `${info.jsEvent.pageX}px`;
-          popup.style.top = `${info.jsEvent.pageY}px`;
-          popup.style.display = 'block';
-        },
-        events: '/events'
-      });
-      calendar.render();
-    });
-
-    function submitAttendance() {
-      const name = document.getElementById('name').value;
-      const status = document.getElementById('status').value;
-      const note = document.getElementById('note').value;
-      const comp_off = document.getElementById('comp_off').value;
-
-      axios.post('/mark', {
-        date: selectedDate,
-        name,
-        status,
-        note,
-        comp_off
-      }).then(() => {
-        location.reload();  // refresh calendar
-      });
-    }
-  </script>
-</body>
-</html>
+   
