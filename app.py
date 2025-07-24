@@ -1,55 +1,76 @@
-from flask import Flask, render_template, request, redirect, send_file
+from flask import Flask, render_template, request, jsonify
 import os
-import pandas as pd
-from datetime import datetime
+import json
 
 app = Flask(__name__)
-DATA_FOLDER = 'attendance_data'
-os.makedirs(DATA_FOLDER, exist_ok=True)
+DATA_FILE = 'attendance_data/data.json'
 
-# Home page - Mark attendance
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        name = request.form['name'].strip().title()
-        if name:
-            date_str = datetime.now().strftime('%Y-%m-%d')
-            file_path = os.path.join(DATA_FOLDER, f'{date_str}.csv')
-            now_time = datetime.now().strftime('%H:%M:%S')
+# Ensure file exists
+os.makedirs('attendance_data', exist_ok=True)
+if not os.path.isfile(DATA_FILE):
+    with open(DATA_FILE, 'w') as f:
+        json.dump({}, f)
 
-            # If file exists, append; else, create
-            if os.path.exists(file_path):
-                df = pd.read_csv(file_path)
-                if name not in df['Name'].values:
-                    df = pd.concat([df, pd.DataFrame([[name, now_time]], columns=['Name', 'Time'])], ignore_index=True)
-                    df.to_csv(file_path, index=False)
-            else:
-                df = pd.DataFrame([[name, now_time]], columns=['Name', 'Time'])
-                df.to_csv(file_path, index=False)
+def load_data():
+    with open(DATA_FILE, 'r') as f:
+        return json.load(f)
 
-        return redirect('/')
+def save_data(data):
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f, indent=4)
 
+@app.route('/')
+def home():
     return render_template('index.html')
 
-# View attendance
-@app.route('/view')
-def view():
-    date = request.args.get('date') or datetime.now().strftime('%Y-%m-%d')
-    file_path = os.path.join(DATA_FOLDER, f'{date}.csv')
-    data = []
-    if os.path.exists(file_path):
-        data = pd.read_csv(file_path).to_dict(orient='records')
-    return render_template('view.html', data=data, date=date)
+@app.route('/calendar')
+def calendar():
+    return render_template('calendar.html')
 
-# Export CSV
-@app.route('/export')
-def export():
-    date = request.args.get('date') or datetime.now().strftime('%Y-%m-%d')
-    file_path = os.path.join(DATA_FOLDER, f'{date}.csv')
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
+@app.route('/events')
+def get_events():
+    data = load_data()
+    events = []
+    for date, records in data.items():
+        for name, info in records.items():
+            events.append({
+                "title": f"{name} - {info['status']}",
+                "start": date,
+                "color": info.get("color", "gray")
+            })
+    return jsonify(events)
+
+@app.route('/mark', methods=['POST'])
+def mark_attendance():
+    req = request.json
+    date = req['date']
+    name = req['name']
+    status = req['status']
+    note = req.get('note', '')
+    comp_off = req.get('comp_off', '')
+    
+    # Status → color mapping
+    color_map = {
+        "Present": "green",
+        "Absent": "red",
+        "Half Day": "yellow",
+        "PL": "orange",
+        "SL": "purple",
+        "Comp-Off": "blue"
+    }
+
+    data = load_data()
+    if date not in data:
+        data[date] = {}
+    data[date][name] = {
+        "status": status,
+        "color": color_map.get(status, "gray"),
+        "note": note,
+        "comp_off_comment": comp_off
+    }
+    save_data(data)
+    return jsonify({"message": "Saved successfully!"})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
-
