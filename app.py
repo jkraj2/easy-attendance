@@ -48,6 +48,9 @@ def export():
     file_path = os.path.join(DATA_FOLDER, f'{date}.csv')
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
+        if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))  # Render provides PORT env var
+    app.run(debug=False, host='0.0.0.0', port=port)
     return 'No data for selected date', 404
 
 if __name__ == '__main__':
