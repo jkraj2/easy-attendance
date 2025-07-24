@@ -51,4 +51,42 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
-   
+    let selectedDate = '';
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      const popup = document.getElementById('popup');
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        dateClick: function (info) {
+          selectedDate = info.dateStr;
+          popup.style.left = `${info.jsEvent.pageX}px`;
+          popup.style.top = `${info.jsEvent.pageY}px`;
+          popup.style.display = 'block';
+        },
+        events: '/events'
+      });
+
+      calendar.render();
+    });
+
+    function submitAttendance() {
+      const name = document.getElementById('name').value;
+      const status = document.getElementById('status').value;
+      const note = document.getElementById('note').value;
+      const comp_off = document.getElementById('comp_off').value;
+
+      axios.post('/mark', {
+        date: selectedDate,
+        name,
+        status,
+        note,
+        comp_off
+      }).then(() => {
+        location.reload();  // Refresh calendar after marking
+      });
+    }
+  </script>
+</body>
+</html>
