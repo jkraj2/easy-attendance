@@ -43,7 +43,7 @@ def get_events():
 
 @app.route('/mark', methods=['POST'])
 def mark_attendance():
-    req = request.json
+    req = request.get_json(force=True)  # <-- force=True ensures JSON is parsed
     date = req['date']
     name = req['name']
     status = req['status']
