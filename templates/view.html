@@ -1,36 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Attendance Records</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background: #007bff;
+      color: white;
+      font-weight: 600;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    h2 {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 26px;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
-
-<div class="container">
-  <h1>📊 Attendance Records</h1>
-
+  <h2>📊 Attendance Records</h2>
   <table>
-    <tr>
-      <th>Date</th>
-      <th>Name</th>
-      <th>Status</th>
-      <th>Note</th>
-      <th>Comp-Off</th>
-    </tr>
-
-    {% for r in records %}
-    <tr>
-      <td>{{ r.date }}</td>
-      <td>{{ r.name }}</td>
-      <td>{{ r.status }}</td>
-      <td>{{ r.note }}</td>
-      <td>{{ r.comp_off }}</td>
-    </tr>
-    {% endfor %}
-
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Note</th>
+        <th>Comp-Off</th>
+      </tr>
+    </thead>
+    <tbody id="records">
+      <!-- Records will be inserted here -->
+    </tbody>
   </table>
 
-</div>
-
+  <script>
+    fetch('/events')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById('records');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${item.start}</td>
+            <td>${item.title.split(' - ')[0]}</td>
+            <td>${item.title.split(' - ')[1]}</td>
+            <td>${item.extendedProps.note || ''}</td>
+            <td>${item.extendedProps.comp_off || ''}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error("Error fetching attendance data:", err);
+      });
+  </script>
 </body>
 </html>
