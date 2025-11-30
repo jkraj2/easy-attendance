@@ -1,25 +1,19 @@
 from flask import Flask, render_template, request, jsonify
-import json, os
+import os
+import json
 
 app = Flask(__name__)
 
-DATA_FILE = "attendance_data/attendance.json"
+# Folder to store data
+DATA_FOLDER = "attendance_data"
+FILE_PATH = os.path.join(DATA_FOLDER, "data.json")
 
-# Ensure file exists
-os.makedirs("attendance_data", exist_ok=True)
-if not os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "w") as f:
+os.makedirs(DATA_FOLDER, exist_ok=True)
+
+# Create file if not exists
+if not os.path.exists(FILE_PATH):
+    with open(FILE_PATH, "w") as f:
         json.dump([], f)
-
-
-def load_data():
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
-
-
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
 
 
 @app.route("/")
@@ -34,39 +28,41 @@ def calendar_page():
 
 @app.route("/view")
 def view_page():
-    data = load_data()
-    return render_template("view.html", records=data)
+    return render_template("view.html")
 
 
 @app.route("/events")
-def events():
-    data = load_data()
-
-    # Convert to FullCalendar event format
-    events_list = []
-    for entry in data:
-        color = "#27ae60" if entry["status"] == "Present" else (
-                "#e74c3c" if entry["status"] == "Absent" else "#f1c40f"
-        )
-
-        events_list.append({
-            "title": f"{entry['name']} - {entry['status']}",
-            "start": entry["date"],
-            "color": color
-        })
-
-    return jsonify(events_list)
+def get_events():
+    with open(FILE_PATH, "r") as f:
+        events = json.load(f)
+    return jsonify(events)
 
 
 @app.route("/mark", methods=["POST"])
 def mark_attendance():
-    req = request.get_json()
-    data = load_data()
-    data.append(req)
-    save_data(data)
-    return jsonify({"message": "Attendance Saved!"})
+    data = request.json
+
+    with open(FILE_PATH, "r") as f:
+        events = json.load(f)
+
+    # Create event to display on calendar
+    event = {
+        "title": f"{data['name']} - {data['status']}",
+        "start": data["date"],
+        "extendedProps": {
+            "note": data.get("note"),
+            "comp_off": data.get("comp_off")
+        }
+    }
+
+    events.append(event)
+
+    with open(FILE_PATH, "w") as f:
+        json.dump(events, f, indent=2)
+
+    return jsonify({"message": "Attendance Saved Successfully"})
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 1000))
     app.run(host="0.0.0.0", port=port)
