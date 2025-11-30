@@ -4,19 +4,15 @@ import json
 
 app = Flask(__name__)
 
-# DATA FOLDER AND FILE
-DATA_FOLDER = "attendance_data"
-FILE_PATH = os.path.join(DATA_FOLDER, "data.json")
-
-# Ensure folder exists
-os.makedirs(DATA_FOLDER, exist_ok=True)
+# Use /tmp folder on Render for safe writing
+FILE_PATH = os.path.join("/tmp", "data.json")
 
 # Ensure file exists
 if not os.path.exists(FILE_PATH):
     with open(FILE_PATH, "w") as f:
-        f.write("[]")  # empty list
+        json.dump([], f)
 
-# SAFE LOAD JSON
+# SAFE LOAD DATA
 def load_data():
     try:
         with open(FILE_PATH, "r") as f:
@@ -26,7 +22,6 @@ def load_data():
             json.dump([], f)
         return []
 
-# ROUTES
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -47,6 +42,9 @@ def get_events():
 def mark_attendance():
     try:
         data = request.json
+        if not data.get("name") or not data.get("date"):
+            return jsonify({"message": "Name and Date are required"}), 400
+
         events = load_data()
 
         new_event = {
@@ -68,7 +66,6 @@ def mark_attendance():
         print("ERROR:", e)
         return jsonify({"message": "Server Error", "error": str(e)}), 500
 
-# RUN
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 1000))
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
