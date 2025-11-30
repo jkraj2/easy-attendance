@@ -1,17 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Attendance System</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome for icons -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background-color: #f4f6f8;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      padding: 40px 20px;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .card i {
+      font-size: 50px;
+      margin-bottom: 15px;
+      color: #007bff;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        font-size: 22px;
+        padding: 15px;
+      }
+      .card i {
+        font-size: 40px;
+      }
+      .card h3 {
+        font-size: 18px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="container center">
-    <h1>📌 Attendance Dashboard</h1>
+  <header>📌 Attendance Dashboard</header>
 
-    <a class="btn" href="/calendar">📅 Mark Attendance</a>
-    <a class="btn green" href="/view">📊 View Attendance Records</a>
-</div>
+  <div class="container">
+    <div class="card" onclick="location.href='/calendar'">
+      <i class="fas fa-calendar-check"></i>
+      <h3>📅 Mark Attendance</h3>
+    </div>
+
+    <div class="card" onclick="location.href='/view'">
+      <i class="fas fa-chart-bar"></i>
+      <h3>📊 View Attendance Records</h3>
+    </div>
+  </div>
 
 </body>
 </html>
