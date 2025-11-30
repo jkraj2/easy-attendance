@@ -23,6 +23,11 @@ function closeForm() {
 }
 
 function submitAttendance() {
+    if (!selectedDate) {
+        alert("Please select a date on the calendar first.");
+        return;
+    }
+
     const payload = {
         date: selectedDate,
         name: document.getElementById("name").value,
@@ -36,14 +41,14 @@ function submitAttendance() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
-        .then(res => res.json())
-        .then(data => {
-            alert(data.message);
-            closeForm();
-            location.reload();
-        })
-        .catch(err => {
-            alert("Error saving attendance");
-            console.error(err);
-        });
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        closeForm();
+        location.reload();
+    })
+    .catch(err => {
+        alert("Error saving attendance");
+        console.error(err);
+    });
 }
