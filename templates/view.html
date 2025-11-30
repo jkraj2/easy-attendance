@@ -1,22 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Attendance List</title>
+  <title>Attendance Records</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h2>Attendance for {{ date }}</h2>
-    {% if data %}
-    <ul>
-        {% for row in data %}
-        <li>{{ row['Name'] }} - {{ row['Time'] }}</li>
-        {% endfor %}
-    </ul>
-    <a href="/export?date={{ date }}">Download CSV</a>
-    {% else %}
-    <p>No attendance marked yet.</p>
-    {% endif %}
-    <br><br>
-    <a href="/">Go Back</a>
+
+<div class="container">
+  <h1>📊 Attendance Records</h1>
+
+  <table>
+    <tr>
+      <th>Date</th>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Note</th>
+      <th>Comp-Off</th>
+    </tr>
+
+    {% for r in records %}
+    <tr>
+      <td>{{ r.date }}</td>
+      <td>{{ r.name }}</td>
+      <td>{{ r.status }}</td>
+      <td>{{ r.note }}</td>
+      <td>{{ r.comp_off }}</td>
+    </tr>
+    {% endfor %}
+
+  </table>
+
+</div>
+
 </body>
 </html>
-
