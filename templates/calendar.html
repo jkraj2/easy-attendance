@@ -10,7 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
     * {
@@ -21,147 +21,135 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
+      background-color: #eef1f6;
     }
 
-    h2 {
+    .header {
+      background: white;
+      padding: 20px;
       text-align: center;
-      padding: 20px 0 10px;
-      font-size: 1.6rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #2c3e50;
     }
 
-    #calendar {
-      max-width: 100%;
-      margin: auto;
-      padding: 10px;
+    #calendar-wrapper {
+      max-width: 1200px;
+      margin: 25px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.07);
     }
 
+    /* Popup Modal */
     #form-popup {
       position: fixed;
-      background: white;
-      border: 1px solid #ccc;
-      padding: 15px;
-      top: 20%;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-      max-width: 400px;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: white;
+      padding: 20px 25px;
+      width: 92%;
+      max-width: 420px;
+      border-radius: 12px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
       display: none;
       z-index: 9999;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-      border-radius: 10px;
+      transition: 0.25s ease-in-out;
+      opacity: 0;
     }
 
-    label, input, select, textarea, button {
+    #form-popup.active {
+      display: block;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #form-popup h3 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: 500;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select, textarea {
       width: 100%;
-      font-size: 1rem;
-      margin: 8px 0;
-    }
-
-    button {
       padding: 10px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 5px;
+      background: #fafafa;
     }
 
-    button:hover {
-      background-color: #0056b3;
+    textarea {
+      height: 70px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 14px;
+      border: none;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-save {
+      background: #007bff;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background: #0056b3;
+    }
+
+    .btn-cancel {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-cancel:hover {
+      background: #c0392b;
     }
 
     @media (max-width: 600px) {
-      h2 {
-        font-size: 1.2rem;
-      }
-      #form-popup {
-        top: 10%;
+      .header {
+        font-size: 1.4rem;
       }
     }
   </style>
 </head>
+
 <body>
-  <h2>📅 Attendance Calendar</h2>
-  <div id="calendar"></div>
+
+  <div class="header">📅 Attendance Calendar</div>
+
+  <!-- Main Calendar Card -->
+  <div id="calendar-wrapper">
+    <div id="calendar"></div>
+  </div>
 
   <!-- Attendance Form Popup -->
   <div id="form-popup">
-    <label>Name:</label>
-    <input type="text" id="name" required />
+    <h3>Mark Attendance</h3>
 
-    <label>Status:</label>
-    <select id="status">
-      <option value="Present">Present</option>
-      <option value="Absent">Absent</option>
-      <option value="Half Day">Half Day</option>
-      <option value="PL">PL (Paid Leave)</option>
-      <option value="SL">SL (Sick Leave)</option>
-      <option value="Comp-Off">Comp-Off</option>
-    </select>
-
-    <label>Note:</label>
-    <textarea id="note"></textarea>
-
-    <label>Comp-Off Comment:</label>
-    <input type="text" id="comp_off" />
-
-    <button onclick="submitAttendance()">Submit</button>
-    <button onclick="closeForm()" style="background-color: #dc3545;">Cancel</button>
-  </div>
-
-  <script>
-    let selectedDate = null;
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const calendarEl = document.getElementById('calendar');
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        selectable: true,
-        height: 'auto',
-        dateClick: function (info) {
-          selectedDate = info.dateStr;
-          document.getElementById('form-popup').style.display = 'block';
-        },
-        events: '/events'
-      });
-
-      calendar.render();
-    });
-
-    function closeForm() {
-      document.getElementById('form-popup').style.display = 'none';
-    }
-
-    function submitAttendance() {
-      const name = document.getElementById('name').value;
-      const status = document.getElementById('status').value;
-      const note = document.getElementById('note').value;
-      const comp_off = document.getElementById('comp_off').value;
-
-      fetch('/mark', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          date: selectedDate,
-          name,
-          status,
-          note,
-          comp_off
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || "Saved!");
-        closeForm();
-        location.reload();
-      })
-      .catch(err => {
-        alert("Error saving data.");
-        console.error(err);
-      });
-    }
-  </script>
-</body>
-</html>
+    <label>Name</label>
+    <input type="text" id="name" placeholder="Enter employee name">
