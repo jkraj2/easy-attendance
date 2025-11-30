@@ -2,232 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Attendance Calendar</title>
 
-  <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #eef1f6;
-    }
-
-    .header {
-      background: white;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: #2c3e50;
-    }
-
-    #calendar-wrapper {
-      max-width: 1200px;
-      margin: 25px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.07);
-    }
-
-    /* Popup Modal */
-    #form-popup {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.9);
-      background: white;
-      padding: 20px 25px;
-      width: 92%;
-      max-width: 420px;
-      border-radius: 12px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.25);
-      display: none;
-      z-index: 9999;
-      transition: 0.25s ease-in-out;
-      opacity: 0;
-    }
-
-    #form-popup.active {
-      display: block;
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    #form-popup h3 {
-      margin-top: 0;
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-
-    label {
-      font-weight: 500;
-      margin-top: 10px;
-      display: block;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-top: 5px;
-      background: #fafafa;
-    }
-
-    textarea {
-      height: 70px;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 10px 14px;
-      border: none;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-save {
-      background: #007bff;
-      color: white;
-    }
-
-    .btn-save:hover {
-      background: #0056b3;
-    }
-
-    .btn-cancel {
-      background: #e74c3c;
-      color: white;
-    }
-
-    .btn-cancel:hover {
-      background: #c0392b;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
-  <div class="header">📅 Attendance Calendar</div>
+<div class="header">📅 Attendance Calendar</div>
 
-  <!-- Main Calendar Card -->
-  <div id="calendar-wrapper">
-    <div id="calendar"></div>
+<div id="calendar-wrapper">
+  <div id="calendar"></div>
+</div>
+
+<!-- Popup -->
+<div id="form-popup">
+  <h3>Mark Attendance</h3>
+
+  <label>Name</label>
+  <input type="text" id="name">
+
+  <label>Status</label>
+  <select id="status">
+    <option value="Present">Present</option>
+    <option value="Absent">Absent</option>
+    <option value="Half Day">Half Day</option>
+    <option value="PL">PL (Paid Leave)</option>
+    <option value="SL">SL (Sick Leave)</option>
+    <option value="Comp-Off">Comp-Off</option>
+  </select>
+
+  <label>Note</label>
+  <textarea id="note"></textarea>
+
+  <label>Comp-Off Comment</label>
+  <input type="text" id="comp_off">
+
+  <div class="btn-box">
+    <button class="btn" onclick="submitAttendance()">Save</button>
+    <button class="btn red" onclick="closeForm()">Cancel</button>
   </div>
+</div>
 
-  <!-- Attendance Form Popup -->
-  <div id="form-popup">
-    <h3>Mark Attendance</h3>
-
-    <label>Name</label>
-    <input type="text" id="name" placeholder="Enter employee name">
-
-    <label>Status</label>
-    <select id="status">
-      <option value="Present">Present</option>
-      <option value="Absent">Absent</option>
-      <option value="Half Day">Half Day</option>
-      <option value="PL">PL (Paid Leave)</option>
-      <option value="SL">SL (Sick Leave)</option>
-      <option value="Comp-Off">Comp-Off</option>
-    </select>
-
-    <label>Note</label>
-    <textarea id="note" placeholder="Add remarks..."></textarea>
-
-    <label>Comp-Off Comment</label>
-    <input type="text" id="comp_off" placeholder="Enter comp-off reason">
-
-    <div class="btn-group">
-      <button class="btn btn-save" onclick="submitAttendance()">Save</button>
-      <button class="btn btn-cancel" onclick="closeForm()">Cancel</button>
-    </div>
-  </div>
-
-  <script>
-    let selectedDate = null;
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const calendarEl = document.getElementById('calendar');
-
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        selectable: true,
-        height: 'auto',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,listMonth'
-        },
-        dateClick: function (info) {
-          selectedDate = info.dateStr;
-          document.getElementById('form-popup').classList.add('active');
-        },
-        events: '/events'
-      });
-
-      calendar.render();
-    });
-
-    function closeForm() {
-      document.getElementById('form-popup').classList.remove('active');
-    }
-
-    function submitAttendance() {
-      const name = document.getElementById('name').value;
-      const status = document.getElementById('status').value;
-      const note = document.getElementById('note').value;
-      const comp_off = document.getElementById('comp_off').value;
-
-      fetch('/mark', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: selectedDate,
-          name,
-          status,
-          note,
-          comp_off
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || "Attendance Saved!");
-        closeForm();
-        location.reload();
-      })
-      .catch(err => {
-        alert("Error saving attendance.");
-        console.error(err);
-      });
-    }
-  </script>
+<script src="/static/script.js"></script>
 
 </body>
 </html>
