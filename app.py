@@ -38,6 +38,16 @@ def view():
     records = load_data()
     return render_template("view.html", records=records)
 
+@app.route("/all-records")
+def all_records():
+    data = load_data()
+
+    # Sort by date (newest first)
+    data_sorted = sorted(data, key=lambda x: x["date"], reverse=True)
+
+    return render_template("all_records.html", records=data_sorted)
+
+
 
 # ---------- API: GET EVENTS FOR CALENDAR ----------
 @app.route("/events")
