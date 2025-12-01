@@ -181,6 +181,45 @@ async function loadHomeSummary() {
 
 loadHomeSummary();
 </script>
-  
+
+  <script>
+async function loadHomeSummary() {
+  try {
+    const res = await fetch('/events');
+    const events = await res.json();
+
+    let total = events.length;
+    let present = 0;
+    let absent = 0;
+    let half = 0;
+    let other = 0;
+
+    events.forEach(ev => {
+      let status = "";
+
+      if (ev.title.includes(" - ")) {
+        status = ev.title.split(" - ").pop().trim();
+      }
+
+      if (status === "Present") present++;
+      else if (status === "Absent") absent++;
+      else if (status === "Half Day" || status === "Half-Day") half++;
+      else other++;
+    });
+
+    document.getElementById("sumTotal").innerText = total;
+    document.getElementById("sumPresent").innerText = present;
+    document.getElementById("sumAbsent").innerText = absent;
+    document.getElementById("sumHalf").innerText = half;
+    document.getElementById("sumOther").innerText = other;
+
+  } catch (error) {
+    console.error("Summary load error:", error);
+  }
+}
+
+loadHomeSummary();
+</script>
+
 </body>
 </html>
