@@ -61,3 +61,21 @@ body {
     background: #dc3545;
     margin-top: 5px;
 }
+
+.attendance-summary {
+  max-width: 1200px;
+  margin: 20px auto;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.attendance-summary .pill {
+  background: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  font-weight: 600;
+  font-size: 15px;
+}
