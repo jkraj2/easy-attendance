@@ -1,71 +1,76 @@
-from flask import Flask, render_template, request, jsonify
-import os
-import json
+from flask import Flask, render_template, jsonify, request
+import json, os
 
 app = Flask(__name__)
 
-# Use /tmp folder on Render for safe writing
-FILE_PATH = os.path.join("/tmp", "data.json")
+DATA_FILE = "attendance_data/data.json"
 
-# Ensure file exists
-if not os.path.exists(FILE_PATH):
-    with open(FILE_PATH, "w") as f:
-        json.dump([], f)
-
-# SAFE LOAD DATA
+# ----------------- LOAD DATA -----------------
 def load_data():
+    if not os.path.exists(DATA_FILE):
+        return []
     try:
-        with open(FILE_PATH, "r") as f:
+        with open(DATA_FILE, "r") as f:
             return json.load(f)
     except:
-        with open(FILE_PATH, "w") as f:
-            json.dump([], f)
         return []
 
+
+# ----------------- SAVE DATA -----------------
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+# ----------------- ROUTES -----------------
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
+
 @app.route("/calendar")
-def calendar_page():
+def calendar():
     return render_template("calendar.html")
 
+
 @app.route("/view")
-def view_page():
-    return render_template("view.html")
+def view():
+    records = load_data()
+    return render_template("view.html", records=records)
 
+
+# ---------- API: GET EVENTS FOR CALENDAR ----------
 @app.route("/events")
-def get_events():
-    return jsonify(load_data())
+def events():
+    events = []
+    data = load_data()
 
-@app.route("/mark", methods=["POST"])
-def mark_attendance():
-    try:
-        data = request.json
-        if not data.get("name") or not data.get("date"):
-            return jsonify({"message": "Name and Date are required"}), 400
-
-        events = load_data()
-
-        new_event = {
-            "title": f"{data['name']} - {data['status']}",
-            "start": data["date"],
+    for rec in data:
+        events.append({
+            "title": f"{rec['name']} - {rec['status']}",
+            "start": rec["date"],
             "extendedProps": {
-                "note": data.get("note", ""),
-                "comp_off": data.get("comp_off", "")
+                "note": rec["note"],
+                "comp_off": rec["comp_off"]
             }
-        }
+        })
 
-        events.append(new_event)
+    return jsonify(events)
 
-        with open(FILE_PATH, "w") as f:
-            json.dump(events, f, indent=2)
 
-        return jsonify({"message": "Attendance Saved Successfully"})
-    except Exception as e:
-        print("ERROR:", e)
-        return jsonify({"message": "Server Error", "error": str(e)}), 500
+# ---------- API: SAVE ATTENDANCE ----------
+@app.route("/mark", methods=["POST"])
+def mark():
+    record = request.json
+    data = load_data()
+    data.append(record)           # Add new record FOREVER
+    save_data(data)
 
+    return jsonify({"message": "Attendance saved successfully!"})
+
+
+# ----------------- RENDER PORT FIX FOR RENDER.COM -----------------
 if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
