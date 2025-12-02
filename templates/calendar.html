@@ -50,8 +50,9 @@
   <div id="form-popup" class="popup">
     <h3>Mark Attendance</h3>
 
-    <label>Name:</label>
-    <input type="text" id="name" required>
+   <label>Name:</label>
+<select id="name"></select>
+
 
     <label>Status:</label>
     <select id="status">
@@ -75,5 +76,9 @@
 
   <!-- Calendar JS -->
   <script src="{{ url_for('static', filename='calendar.js') }}"></script>
+
+  <label>Name:</label>
+<select id="name"></select>
+
 </body>
 </html>
