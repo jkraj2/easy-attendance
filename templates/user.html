@@ -67,17 +67,17 @@ function saveUser() {
     company: document.getElementById("company").value
   };
 
-  fetch('/save-user', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
+  fetch("/save-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   })
   .then(res => res.json())
   .then(d => {
     alert(d.message);
-    window.location.href = '/user';
   });
 }
+
 </script>
 
 </body>
