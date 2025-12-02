@@ -16,7 +16,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <!-- TOP NAVBAR -->
+
+<!-- TOP NAVBAR -->
 <div style="
   width: 100%;
   background: #0d6efd;
@@ -43,19 +44,20 @@
 
 </div>
 
-  <h2 class="title">📅 Attendance Calendar</h2>
-  <div id="calendar"></div>
+<h2 class="title">📅 Attendance Calendar</h2>
+<div id="calendar"></div>
 
-  <!-- Attendance Form Popup -->
-  <div id="form-popup" class="popup">
+<!-- Attendance Form Popup -->
+<div id="form-popup" class="popup">
     <h3>Mark Attendance</h3>
 
-   <label>Name:</label>
-<select id="name"></select>
-
+    <label>Name:</label>
+    <select id="userName" class="form-control">
+      <option value="">Select User</option>
+    </select>
 
     <label>Status:</label>
-    <select id="status">
+    <select id="status" class="form-control">
       <option value="Present">Present</option>
       <option value="Absent">Absent</option>
       <option value="Half Day">Half Day</option>
@@ -65,20 +67,36 @@
     </select>
 
     <label>Note:</label>
-    <textarea id="note"></textarea>
+    <textarea id="note" class="form-control"></textarea>
 
     <label>Comp-Off Comment:</label>
-    <input type="text" id="comp_off">
+    <input type="text" id="comp_off" class="form-control">
 
     <button onclick="submitAttendance()">Submit</button>
     <button class="cancel" onclick="closeForm()">Cancel</button>
-  </div>
+</div>
 
-  <!-- Calendar JS -->
-  <script src="{{ url_for('static', filename='calendar.js') }}"></script>
+<!-- Calendar JS -->
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
 
-  <label>Name:</label>
-<select id="name"></select>
+<script>
+// 🔹 LOAD USERS INTO DROPDOWN
+function loadUsers() {
+    fetch("/users-list")
+        .then(res => res.json())
+        .then(users => {
+            let dropdown = document.getElementById("userName");
+            dropdown.innerHTML = `<option value="">Select User</option>`; 
+
+            users.forEach(u => {
+                dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+            });
+        });
+}
+
+// Load users at page load
+document.addEventListener("DOMContentLoaded", loadUsers);
+</script>
 
 </body>
 </html>
