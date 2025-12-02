@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
   <title>Attendance Dashboard</title>
 
   <!-- Google Fonts -->
@@ -219,6 +221,13 @@ async function loadHomeSummary() {
 }
 
 loadHomeSummary();
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.Android) {
+        localStorage.setItem("support", "true");
+    }
+});
 </script>
 
 </body>
