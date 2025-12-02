@@ -67,6 +67,28 @@ def events():
 
     return jsonify(events)
 
+@app.route("/user")
+def user_page():
+    return render_template("user.html")
+
+# Save User
+@app.route("/save-user", methods=["POST"])
+def save_user():
+    data = request.json
+
+    if os.path.exists(USER_FILE):
+        with open(USER_FILE, "r") as f:
+            users = json.load(f)
+    else:
+        users = []
+
+    users.append(data)
+
+    with open(USER_FILE, "w") as f:
+        json.dump(users, f, indent=2)
+
+    return jsonify({"message": "User Saved Successfully!"})
+
 
 # ---------- API: SAVE ATTENDANCE ----------
 @app.route("/mark", methods=["POST"])
