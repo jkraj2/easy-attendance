@@ -4,6 +4,7 @@ import json, os
 app = Flask(__name__)
 
 DATA_FILE = "attendance_data/data.json"
+USER_FILE = "attendance_data/users.json"
 
 # ----------------- LOAD DATA -----------------
 def load_data():
