@@ -15,6 +15,9 @@
     table{width:100%;min-width:900px;border-collapse:collapse}
     th{background:#f4f7fb;padding:12px;position:sticky;top:0}
     td{padding:10px;border-bottom:1px solid #f2f4f8}
+    .status-pill{display:inline-block;padding:6px 9px;border-radius:999px;font-size:13px;font-weight:600}
+    .Present{background:#e6f8ec;color:#1f7a3a}.Absent{background:#fdecea;color:#b02a37}.Half-Day{background:#fff4db;color:#7a5500}.PL{background:#e8f1ff;color:#1947b3}.SL{background:#ffeef5;color:#9b1c57}.Comp-Off{background:#eef3f7;color:#264653}.Week-Off{background:#eceff1;color:#2f5d3f}
+    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
   </style>
 </head>
 <body>
@@ -27,7 +30,7 @@
 
   <div class="controls">
     <input id="searchInput" placeholder="Search (name, note, status, date)">
-    <select id="statusFilter"><option value="ALL">All Status</option><option value="Present">Present</option><option value="Absent">Absent</option></select>
+    <select id="statusFilter"><option value="ALL">All Status</option><option value="Present">Present</option><option value="Absent">Absent</option><option value="Half Day">Half Day</option></select>
     <select id="nameFilter"><option value="ALL">All Employees</option></select>
     <input type="date" id="fromDate"><input type="date" id="toDate">
     <button id="clearFilters">Clear</button>
@@ -44,6 +47,8 @@
       <tbody id="tableBody"></tbody>
     </table>
   </div>
+
+  <div id="toast"></div>
 
 <script src="{{ url_for('static', filename='all_records.js') }}"></script>
 </body>
