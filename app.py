@@ -57,6 +57,16 @@ def all_records():
 def user_page():
     return render_template("user.html")
 
+@app.route("/view-users")
+def view_users():
+    if os.path.exists(USER_FILE):
+        with open(USER_FILE, "r") as f:
+            users = json.load(f)
+    else:
+        users = []
+    return render_template("view_users.html", users=users)
+
+
 # ----------------- API ENDPOINTS -----------------
 @app.route("/save-user", methods=["POST"])
 def save_user():
