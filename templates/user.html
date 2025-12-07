@@ -1,89 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Add User</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
-    body { background: #f4f4f4; }
-    .card {
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+    body{font-family:Inter, sans-serif;background:#f4f6f9;margin:0}
+    .topbar{width:100%;background:#0d6efd;padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:99}
+    .container{max-width:640px;margin:18px auto;padding:0 12px}
+    .card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+    .form-row{margin-top:10px}
+    .form-row label{display:block;margin-bottom:6px;font-weight:600}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
+    button{width:100%;padding:12px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-weight:700;margin-top:14px}
   </style>
 </head>
 <body>
-
-<!-- NAVBAR -->
-<div style="
-  width: 100%;
-  background: #0d6efd;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  z-index: 999;">
-  
-  <div onclick="window.location.href='/'" style="cursor:pointer; display:flex; align-items:center;">
-    🏠 <span style="margin-left:5px;">Home</span>
+  <div class="topbar">
+    <div onclick="location.href='/'">🏠 <span style="margin-left:8px">Home</span></div>
+    <div onclick="location.href='/user'">➕ <span style="margin-left:8px">Add User</span></div>
   </div>
 
-  <div onclick="window.location.href='/user'" style="cursor:pointer; display:flex; align-items:center;">
-    ➕ <span style="margin-left:5px;">Add User</span>
+  <div class="container">
+    <div class="card">
+      <h3 style="margin:0 0 8px;text-align:center">Add New User</h3>
+
+      <div class="form-row">
+        <label for="name">Name</label>
+        <input id="name" type="text" placeholder="Full name">
+      </div>
+
+      <div class="form-row">
+        <label for="email">Email ID</label>
+        <input id="email" type="email" placeholder="email@example.com">
+      </div>
+
+      <div class="form-row">
+        <label for="salary">Salary</label>
+        <input id="salary" type="number" placeholder="Monthly salary">
+      </div>
+
+      <div class="form-row">
+        <label for="company">Company Name</label>
+        <input id="company" type="text" placeholder="Company">
+      </div>
+
+      <button onclick="saveUser()">Save User</button>
+    </div>
   </div>
-</div>
-
-<div class="container mt-4">
-  <div class="card p-4">
-    <h3 class="text-center mb-3">Add New User</h3>
-
-    <label>Name</label>
-    <input id="name" class="form-control">
-
-    <label class="mt-3">Email ID</label>
-    <input id="email" class="form-control">
-
-    <label class="mt-3">Salary</label>
-    <input id="salary" class="form-control" type="number">
-
-    <label class="mt-3">Company Name</label>
-    <input id="company" class="form-control">
-
-    <button class="btn btn-primary mt-4 w-100" onclick="saveUser()">Save User</button>
-  </div>
-</div>
 
 <script>
-function saveUser() {
+async function saveUser(){
   const data = {
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    salary: document.getElementById("salary").value,
-    company: document.getElementById("company").value
+    name: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    salary: document.getElementById('salary').value.trim(),
+    company: document.getElementById('company').value.trim()
   };
-
-  fetch("/save-user", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(d => {
-     // Replace alert()
-     if (window.AppInventor) {
-         window.AppInventor.setWebViewString(d.message);
-     } else {
-         alert(d.message); // for normal browser testing
-     }
-  });
+  // basic validation
+  if(!data.name){ notifyApp('Please enter name'); return; }
+  try{
+    const res = await fetch('/save-user', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    notifyApp(json.message || 'User saved');
+    // optionally clear form
+    document.getElementById('name').value=''; document.getElementById('email').value=''; document.getElementById('salary').value=''; document.getElementById('company').value='';
+  }catch(e){
+    console.error(e);
+    notifyApp('Server error saving user');
+  }
 }
 
+// send message to App Inventor (if present) else fallback to console/alert
+function notifyApp(msg){
+  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
+    window.AppInventor.setWebViewString(msg);
+  } else {
+    // normal browser fallback
+    alert(msg);
+  }
+}
 </script>
-
 </body>
 </html>
