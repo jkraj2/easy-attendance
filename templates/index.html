@@ -24,6 +24,8 @@
     .nav-card{background:#fff;padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);text-align:center;cursor:pointer}
     .nav-card h4{margin:8px 0 0}
     @media(max-width:420px){.card p{font-size:18px}}
+    /* toast */
+    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
   </style>
 </head>
 <body>
@@ -66,7 +68,17 @@
     </div>
   </div>
 
+  <div id="toast"></div>
+
 <script>
+function showToast(msg, timeout=1700){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = '#28a745';
+  t.style.visibility = 'visible';
+  setTimeout(()=> t.style.visibility = 'hidden', timeout);
+}
+
 async function loadSummary(){
   try{
     const res = await fetch('/events');
@@ -84,14 +96,11 @@ async function loadSummary(){
     document.getElementById('sumAbsent').innerText = absent;
     document.getElementById('sumHalf').innerText = half;
     document.getElementById('sumOther').innerText = other;
-    // For AppInventor: notify when needed (optional)
-    if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
-      // no automatic notifications here — only on save actions
-    }
   }catch(e){
     console.error('Summary load error', e);
   }
 }
+
 document.addEventListener('DOMContentLoaded', loadSummary);
 </script>
 </body>
