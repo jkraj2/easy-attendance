@@ -1,86 +1,39 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>📋 Global Attendance Records</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Records</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
-<div class="container mt-3">
+<!-- Sidebar & Toggle -->
+<div id="menuToggle">☰</div>
+<div class="sidebar" id="sidebarMenu">
+  <ul>
+    <li onclick="window.location.href='/'">🏠 Home</li>
+    <li onclick="window.location.href='/calendar'">📅 Calendar</li>
+    <li onclick="window.location.href='/all-records'">📋 Global Records</li>
+    <li onclick="window.location.href='/user'">➕ Add User</li>
+    <li onclick="window.location.href='/view'">👁️ View Attendance</li>
+    <li onclick="window.location.href='/view-users'">👥 View Users</li>
+  </ul>
+</div>
 
-  <!-- Filters -->
-  <div class="row g-2 mb-3">
-    <div class="col-md-3 col-6">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search (name, note, status, date)">
-    </div>
-    <div class="col-md-2 col-6">
-      <select id="statusFilter" class="form-control">
-        <option value="ALL">All Status</option>
-        <option value="Present">Present</option>
-        <option value="Absent">Absent</option>
-        <option value="Half Day">Half Day</option>
-        <option value="PL">PL</option>
-        <option value="SL">SL</option>
-        <option value="Comp-Off">Comp-Off</option>
-        <option value="Week-Off">Week-Off</option>
-      </select>
-    </div>
-    <div class="col-md-2 col-6">
-      <select id="nameFilter" class="form-control">
-        <option value="ALL">All Employees</option>
-      </select>
-    </div>
-    <div class="col-md-2 col-6">
-      <input type="date" id="fromDate" class="form-control">
-    </div>
-    <div class="col-md-2 col-6">
-      <input type="date" id="toDate" class="form-control">
-    </div>
-    <div class="col-md-1 col-6">
-      <button class="btn btn-secondary w-100" id="clearFilters">Clear</button>
-    </div>
-  </div>
+<script>
+const menuToggle = document.getElementById("menuToggle");
+const sidebar = document.getElementById("sidebarMenu");
+menuToggle.addEventListener("click", () => {
+  sidebar.classList.toggle("active");
+});
+</script>
 
-  <!-- Summary Cards -->
-  <div class="row g-2 mb-3" id="summaryBox">
-    <div class="col-6 col-md-2">
-      <div class="card p-2 text-center">
-        <h6>Total</h6>
-        <p id="totalCount">0</p>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="card p-2 text-center">
-        <h6>Present</h6>
-        <p id="countPresent">0</p>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="card p-2 text-center">
-        <h6>Absent</h6>
-        <p id="countAbsent">0</p>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="card p-2 text-center">
-        <h6>Half-Day</h6>
-        <p id="countHalf">0</p>
-      </div>
-    </div>
-    <div class="col-6 col-md-2">
-      <div class="card p-2 text-center">
-        <h6>PL/SL/Comp-Off</h6>
-        <p id="countOther">0</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Export Buttons -->
-  <div class="mb-2 d-flex flex-wrap gap-2">
-    <button class="btn btn-primary" id="exportCsv">CSV</button>
-    <button class="btn btn-success" id="exportExcel">Excel</button>
-    <button class="btn btn-danger" id="exportPdf">PDF</button>
-  </div>
-
-  <!-- Table -->
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered" id="recordsTable">
+<div class="container mt-4">
+  <div class="card p-4 table-wrap">
+    <h3 class="text-center mb-3">📋 Global Attendance Records</h3>
+    <table class="table table-striped">
       <thead>
         <tr>
           <th>Date</th>
@@ -91,22 +44,19 @@
         </tr>
       </thead>
       <tbody id="tableBody">
-        <!-- JS will populate rows -->
+        {% for rec in records %}
+        <tr>
+          <td>{{ rec.date }}</td>
+          <td>{{ rec.name }}</td>
+          <td>{{ rec.status }}</td>
+          <td>{{ rec.note }}</td>
+          <td>{{ rec.comp_off }}</td>
+        </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
-
-  <!-- Pagination -->
-  <nav>
-    <ul class="pagination" id="pagination"></ul>
-  </nav>
-
 </div>
 
-<!-- Export Libraries -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
-<script src="{{ url_for('static', filename='all_records.js') }}"></script>
-{% endblock %}
+</body>
+</html>
