@@ -40,6 +40,25 @@
   </style>
 </head>
 <body>
+<div id="menuToggle">☰</div>
+<div class="sidebar" id="sidebarMenu">
+  <ul>
+    <li onclick="window.location.href='/'">🏠 Home</li>
+    <li onclick="window.location.href='/calendar'">📅 Calendar</li>
+    <li onclick="window.location.href='/all-records'">📋 Global Records</li>
+    <li onclick="window.location.href='/user'">➕ Add User</li>
+    <li onclick="window.location.href='/view'">👁️ View Attendance</li>
+    <li onclick="window.location.href='/view-users'">👥 View Users</li>
+  </ul>
+</div>
+
+<script>
+const menuToggle = document.getElementById("menuToggle");
+const sidebar = document.getElementById("sidebarMenu");
+menuToggle.addEventListener("click", () => {
+  sidebar.classList.toggle("active");
+});
+</script>
 
 <!-- Menu Button -->
 <div id="menu-btn">☰</div>
