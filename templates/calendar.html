@@ -1,48 +1,43 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>📅 Attendance Calendar</h2>
-<div id="calendar"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attendance Calendar</title>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
-<!-- Attendance Popup -->
-<div id="form-popup" class="popup">
-  <h3>Mark Attendance</h3>
-  <select id="userName" class="form-control">
-    <option value="">Select User</option>
-  </select>
-
-  <label>Status:</label>
-  <select id="status">
-    <option value="Present">Present</option>
-    <option value="Absent">Absent</option>
-    <option value="Half Day">Half Day</option>
-    <option value="PL">PL</option>
-    <option value="SL">SL</option>
-    <option value="Comp-Off">Comp-Off</option>
-  </select>
-
-  <label>Note:</label>
-  <textarea id="note"></textarea>
-
-  <label>Comp-Off Comment:</label>
-  <input type="text" id="comp_off">
-
-  <button onclick="submitAttendance()">Submit</button>
-  <button class="cancel" onclick="closeForm()">Cancel</button>
+<!-- Sidebar & Toggle -->
+<div id="menuToggle">☰</div>
+<div class="sidebar" id="sidebarMenu">
+  <ul>
+    <li onclick="window.location.href='/'">🏠 Home</li>
+    <li onclick="window.location.href='/calendar'">📅 Calendar</li>
+    <li onclick="window.location.href='/all-records'">📋 Global Records</li>
+    <li onclick="window.location.href='/user'">➕ Add User</li>
+    <li onclick="window.location.href='/view'">👁️ View Attendance</li>
+    <li onclick="window.location.href='/view-users'">👥 View Users</li>
+  </ul>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<script src="{{ url_for('static', filename='calendar.js') }}"></script>
-
 <script>
-function loadUsers() {
-    fetch("/users-list")
-        .then(res => res.json())
-        .then(users => {
-            let dropdown = document.getElementById("userName");
-            dropdown.innerHTML = `<option value="">Select User</option>`; 
-            users.forEach(u => dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`);
-        });
-}
-document.addEventListener("DOMContentLoaded", loadUsers);
+const menuToggle = document.getElementById("menuToggle");
+const sidebar = document.getElementById("sidebarMenu");
+menuToggle.addEventListener("click", () => {
+  sidebar.classList.toggle("active");
+});
 </script>
-{% endblock %}
+
+<div class="container mt-4">
+  <div class="card p-4">
+    <h3 class="text-center mb-3">📅 Attendance Calendar</h3>
+    <div id="calendar"></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
+</body>
+</html>
