@@ -116,6 +116,14 @@ def mark():
     return jsonify({"message": "Attendance saved successfully!"})
 
 
+@app.route("/get-users")
+def get_users():
+    with open("users.json", "r") as f:
+        users = json.load(f)
+    return jsonify({"users": users})
+
+
+
 # ----------------- RENDER PORT FIX FOR RENDER.COM -----------------
 if __name__ == "__main__":
     import os
