@@ -1,45 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Attendance Calendar</title>
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <nav class="navbar bg-primary text-white d-flex justify-content-between">
-    <button class="btn btn-light" onclick="window.location.href='/'">🏠 Home</button>
-    <span class="fw-bold">📅 Calendar</span>
-    <button class="btn btn-light" onclick="window.location.href='/user'">➕ Add User</button>
-  </nav>
+{% extends "base.html" %}
+{% block content %}
+<h2>📅 Attendance Calendar</h2>
+<div id="calendar"></div>
 
-  <div class="container mt-3">
-    <div id="calendar"></div>
-  </div>
+<!-- Attendance Popup -->
+<div id="form-popup" class="popup">
+  <h3>Mark Attendance</h3>
+  <select id="userName" class="form-control">
+    <option value="">Select User</option>
+  </select>
+
+  <label>Status:</label>
+  <select id="status">
+    <option value="Present">Present</option>
+    <option value="Absent">Absent</option>
+    <option value="Half Day">Half Day</option>
+    <option value="PL">PL</option>
+    <option value="SL">SL</option>
+    <option value="Comp-Off">Comp-Off</option>
+  </select>
+
+  <label>Note:</label>
+  <textarea id="note"></textarea>
+
+  <label>Comp-Off Comment:</label>
+  <input type="text" id="comp_off">
+
+  <button onclick="submitAttendance()">Submit</button>
+  <button class="cancel" onclick="closeForm()">Cancel</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const calendarEl = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    height: 'auto',
-    events: '/events',
-    dateClick: function(info) {
-      let userName = prompt("Enter Name for " + info.dateStr);
-      if(userName){
-        let status = prompt("Enter Status (Present/Absent/PL/SL/Comp-Off):");
-        fetch("/mark", {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({date: info.dateStr, name:userName, status:status, note:"", comp_off:""})
-        }).then(res=>res.json()).then(d=>alert(d.message))
-      }
-    }
-  });
-  calendar.render();
-});
+function loadUsers() {
+    fetch("/users-list")
+        .then(res => res.json())
+        .then(users => {
+            let dropdown = document.getElementById("userName");
+            dropdown.innerHTML = `<option value="">Select User</option>`; 
+            users.forEach(u => dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`);
+        });
+}
+document.addEventListener("DOMContentLoaded", loadUsers);
 </script>
-</body>
-</html>
+{% endblock %}
