@@ -2,61 +2,99 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Global Records</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Global Attendance Records</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<!-- Sidebar & Toggle -->
 <div id="menuToggle">☰</div>
-<div class="sidebar" id="sidebarMenu">
-  <ul>
-    <li onclick="window.location.href='/'">🏠 Home</li>
-    <li onclick="window.location.href='/calendar'">📅 Calendar</li>
-    <li onclick="window.location.href='/all-records'">📋 Global Records</li>
-    <li onclick="window.location.href='/user'">➕ Add User</li>
-    <li onclick="window.location.href='/view'">👁️ View Attendance</li>
-    <li onclick="window.location.href='/view-users'">👥 View Users</li>
-  </ul>
+<div class="sidebar" id="sidebar">
+    <ul>
+        <li onclick="window.location.href='/'">🏠 Home</li>
+        <li onclick="window.location.href='/calendar'">📅 Calendar</li>
+        <li onclick="window.location.href='/all-records'">📋 Global Records</li>
+        <li onclick="window.location.href='/user'">➕ Add User</li>
+        <li onclick="window.location.href='/view'">👁️ View Attendance</li>
+    </ul>
+</div>
+
+<div style="margin-left: 0px; padding: 20px;">
+<h2>📋 Global Attendance Records</h2>
+
+<div class="controls">
+    <input id="searchInput" type="search" placeholder="Search by name/note/status/date">
+    <select id="statusFilter">
+        <option value="ALL">All Status</option>
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+        <option value="Half Day">Half Day</option>
+        <option value="PL">PL</option>
+        <option value="SL">SL</option>
+        <option value="Comp-Off">Comp-Off</option>
+        <option value="Week Off">Week Off</option>
+    </select>
+    <select id="nameFilter">
+        <option value="ALL">All Users</option>
+    </select>
+</div>
+
+<div class="table-wrap">
+<table class="table" id="recordsTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Note</th>
+            <th>Comp-Off</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+</table>
+</div>
 </div>
 
 <script>
-const menuToggle = document.getElementById("menuToggle");
-const sidebar = document.getElementById("sidebarMenu");
-menuToggle.addEventListener("click", () => {
-  sidebar.classList.toggle("active");
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+menuToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
 });
+
+// Load all records
+function loadRecords() {
+    fetch("/all-records-json")
+    .then(res => res.json())
+    .then(data => {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
+        const nameFilter = document.getElementById("nameFilter");
+
+        let users = new Set();
+        data.forEach(r => users.add(r.name));
+        nameFilter.innerHTML = `<option value="ALL">All Users</option>`;
+        users.forEach(u => {
+            nameFilter.innerHTML += `<option value="${u}">${u}</option>`;
+        });
+
+        data.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${r.date}</td>
+                            <td>${r.name}</td>
+                            <td>${r.status}</td>
+                            <td>${r.note}</td>
+                            <td>${r.comp_off}</td>`;
+            tableBody.appendChild(tr);
+        });
+    }).catch(err => {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = `<tr><td colspan="5">Error loading data.</td></tr>`;
+        console.error("Error loading events:", err);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", loadRecords);
 </script>
-
-<div class="container mt-4">
-  <div class="card p-4 table-wrap">
-    <h3 class="text-center mb-3">📋 Global Attendance Records</h3>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Name</th>
-          <th>Status</th>
-          <th>Note</th>
-          <th>Comp-Off</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-        {% for rec in records %}
-        <tr>
-          <td>{{ rec.date }}</td>
-          <td>{{ rec.name }}</td>
-          <td>{{ rec.status }}</td>
-          <td>{{ rec.note }}</td>
-          <td>{{ rec.comp_off }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
 </body>
 </html>
