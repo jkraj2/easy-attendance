@@ -1,221 +1,170 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Search Attendance Records</title>
+{% extends "base.html" %}
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+{% block title %}Global Attendance Records{% endblock %}
+{% block header %}📋 Global Attendance{% endblock %}
 
-  <!-- FontAwesome -->
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+{% block content %}
+<div class="container mt-3">
 
-  <!-- Global CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-  <style>
-    body { font-family: Inter, sans-serif; }
-
-    .controls {
-      max-width: 1200px;
-      margin: 18px auto;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      padding: 0 10px;
-    }
-
-    .controls select, .controls input {
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #d0d7de;
-      font-size: 14px;
-      background: white;
-    }
-
-    .controls .btn {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: #007bff;
-      color: white;
-      font-weight: 600;
-    }
-
-    .controls .btn.secondary {
-      background: #6c757d;
-    }
-
-    .summary {
-      max-width: 1200px;
-      margin: 6px auto;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      padding: 0 10px;
-    }
-
-    .summary .pill {
-      background: white;
-      padding: 8px 12px;
-      border-radius: 10px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-      font-weight: 600;
-    }
-
-    .table-wrap {
-      max-width: 1200px;
-      margin: 12px auto 80px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-      overflow: auto;
-      padding: 0 10px;
-    }
-
-    table.att-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-
-    table.att-table thead th {
-      background: #f4f7fb;
-      padding: 12px;
-      border-bottom: 1px solid #e9eef6;
-      cursor: pointer;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    table.att-table tbody td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #f2f4f8;
-    }
-
-    .pagination {
-      max-width: 1200px;
-      margin: 12px auto 40px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 0 10px;
-    }
-
-    .pagination button {
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-      background: white;
-      cursor: pointer;
-    }
-  </style>
-</head>
-
-<body>
-
-<!-- NAVBAR -->
-<div style="
-  width: 100%;
-  background: #0d6efd;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  z-index: 9999;">
-  
-  <div onclick="window.location.href='/'" style="cursor:pointer; display:flex; align-items:center;">
-    🏠 <span style="margin-left:6px;">Home</span>
+  <!-- Summary Cards -->
+  <div class="d-flex flex-wrap gap-3 mb-3">
+    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
+      <h6>Total</h6>
+      <p id="totalCount">0</p>
+    </div>
+    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
+      <h6>Present</h6>
+      <p id="countPresent">0</p>
+    </div>
+    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
+      <h6>Absent</h6>
+      <p id="countAbsent">0</p>
+    </div>
+    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
+      <h6>Half-Day</h6>
+      <p id="countHalf">0</p>
+    </div>
+    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
+      <h6>PL/SL/Comp-Off</h6>
+      <p id="countOther">0</p>
+    </div>
   </div>
 
-  <div onclick="window.location.href='/user'" style="cursor:pointer; display:flex; align-items:center;">
-    ➕ <span style="margin-left:6px;">Add User</span>
+  <!-- Filters -->
+  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    <input type="search" id="searchInput" class="form-control" placeholder="Search name, note, status, date" style="min-width:150px;">
+    
+    <select id="statusFilter" class="form-control" style="min-width:120px;">
+      <option value="ALL">All Status</option>
+      <option value="Present">Present</option>
+      <option value="Absent">Absent</option>
+      <option value="Half Day">Half Day</option>
+      <option value="PL">PL</option>
+      <option value="SL">SL</option>
+      <option value="Comp-Off">Comp-Off</option>
+      <option value="Week Off">Week Off</option>
+    </select>
+
+    <select id="nameFilter" class="form-control" style="min-width:120px;">
+      <option value="ALL">All Employees</option>
+    </select>
+
+    <label>From</label>
+    <input type="date" id="fromDate" class="form-control" style="min-width:120px;">
+    <label>To</label>
+    <input type="date" id="toDate" class="form-control" style="min-width:120px;">
+
+    <button class="btn btn-secondary" id="clearFilters">Clear</button>
   </div>
-</div>
 
-<header style="background:#007bff;padding:18px;color:white;font-weight:700;text-align:center;">
-  📋 Search Attendance Records
-</header>
-
-<!-- FILTERS -->
-<div class="controls">
-  
-  <input id="searchInput" type="search" placeholder="Search (name, note, status, date)...">
-
-  <select id="statusFilter">
-    <option value="ALL">All Status</option>
-    <option value="Present">Present</option>
-    <option value="Absent">Absent</option>
-    <option value="Half Day">Half Day</option>
-    <option value="PL">PL</option>
-    <option value="SL">SL</option>
-    <option value="Comp-Off">Comp-Off</option>
-    <option value="Week Off">Week Off</option>
-  </select>
-
-  <select id="nameFilter">
-    <option value="ALL">All Employees</option>
-  </select>
-
-  <label>From</label>
-  <input id="fromDate" type="date">
-
-  <label>To</label>
-  <input id="toDate" type="date">
-
-  <button class="btn secondary" id="clearFilters">Clear</button>
-
-  <div style="margin-left:auto; display:flex; gap:8px;">
-    <button class="btn" id="exportCsv">CSV</button>
-    <button class="btn" id="exportExcel">Excel</button>
-    <button class="btn" id="exportPdf">PDF</button>
+  <!-- Records Table -->
+  <div class="table-responsive">
+    <table class="table table-striped" id="recordsTable">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Note</th>
+          <th>Comp-Off</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
   </div>
 
 </div>
+{% endblock %}
 
-<!-- SUMMARY -->
-<div class="summary" id="summaryBox">
-  <div class="pill">Total: <span id="totalCount">0</span></div>
-  <div class="pill">Present: <span id="countPresent">0</span></div>
-  <div class="pill">Absent: <span id="countAbsent">0</span></div>
-  <div class="pill">Half-Day: <span id="countHalf">0</span></div>
-  <div class="pill">PL/SL/Comp-Off: <span id="countOther">0</span></div>
-</div>
+{% block scripts %}
+<script>
+let allRecords = [];
 
-<!-- TABLE -->
-<div class="table-wrap">
-  <table class="att-table" id="recordsTable">
-    <thead>
-      <tr>
-        <th data-key="start" data-type="date">Date ▾</th>
-        <th data-key="name" data-type="string">Name ▾</th>
-        <th data-key="status" data-type="string">Status ▾</th>
-        <th data-key="note" data-type="string">Note ▾</th>
-        <th data-key="comp_off" data-type="string">Comp-Off ▾</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</div>
+// Load attendance data
+function loadData() {
+  fetch("/all-records-json")  // create API endpoint to return JSON
+    .then(res => res.json())
+    .then(data => {
+      allRecords = data.records;
+      renderTable(allRecords);
+      renderSummary(allRecords);
+      populateNameFilter(allRecords);
+    })
+    .catch(err => {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "<tr><td colspan='5'>Error loading data.</td></tr>";
+      console.error("Error loading events:", err);
+    });
+}
 
-<div class="pagination" id="pagination"></div>
+// Render summary cards
+function renderSummary(records) {
+  document.getElementById("totalCount").textContent = records.length;
+  document.getElementById("countPresent").textContent = records.filter(r=>r.status=="Present").length;
+  document.getElementById("countAbsent").textContent = records.filter(r=>r.status=="Absent").length;
+  document.getElementById("countHalf").textContent = records.filter(r=>r.status=="Half Day").length;
+  document.getElementById("countOther").textContent = records.filter(r=>["PL","SL","Comp-Off"].includes(r.status)).length;
+}
 
-<!-- LIBRARIES -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+// Populate name filter
+function populateNameFilter(records) {
+  const nameFilter = document.getElementById("nameFilter");
+  const names = [...new Set(records.map(r=>r.name))];
+  nameFilter.innerHTML = "<option value='ALL'>All Employees</option>";
+  names.forEach(n=>nameFilter.innerHTML += `<option value="${n}">${n}</option>`);
+}
 
-<script src="{{ url_for('static', filename='all_records.js') }}"></script>
+// Render table rows
+function renderTable(records) {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+  records.forEach(r=>{
+    tbody.innerHTML += `<tr>
+      <td>${r.date}</td>
+      <td>${r.name}</td>
+      <td>${r.status}</td>
+      <td>${r.note}</td>
+      <td>${r.comp_off}</td>
+    </tr>`;
+  });
+}
 
-</body>
-</html>
+// Filters
+document.getElementById("searchInput").addEventListener("input", applyFilters);
+document.getElementById("statusFilter").addEventListener("change", applyFilters);
+document.getElementById("nameFilter").addEventListener("change", applyFilters);
+document.getElementById("fromDate").addEventListener("change", applyFilters);
+document.getElementById("toDate").addEventListener("change", applyFilters);
+document.getElementById("clearFilters").addEventListener("click", ()=>{
+  document.getElementById("searchInput").value="";
+  document.getElementById("statusFilter").value="ALL";
+  document.getElementById("nameFilter").value="ALL";
+  document.getElementById("fromDate").value="";
+  document.getElementById("toDate").value="";
+  applyFilters();
+});
+
+function applyFilters() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const status = document.getElementById("statusFilter").value;
+  const name = document.getElementById("nameFilter").value;
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+
+  let filtered = allRecords.filter(r=>{
+    let matchSearch = r.name.toLowerCase().includes(search) || r.note.toLowerCase().includes(search) || r.status.toLowerCase().includes(search) || r.date.includes(search);
+    let matchStatus = (status=="ALL") ? true : r.status==status;
+    let matchName = (name=="ALL") ? true : r.name==name;
+    let matchFrom = from ? r.date >= from : true;
+    let matchTo = to ? r.date <= to : true;
+    return matchSearch && matchStatus && matchName && matchFrom && matchTo;
+  });
+
+  renderTable(filtered);
+  renderSummary(filtered);
+}
+
+// Initial load
+document.addEventListener("DOMContentLoaded", loadData);
+</script>
+{% endblock %}
