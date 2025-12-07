@@ -20,6 +20,7 @@
     .popup select, .popup input, .popup textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px}
     .popup button{margin-top:12px;padding:10px;border-radius:8px;border:none;background:#0d6efd;color:#fff;width:100%}
     .popup .cancel{background:#e11d48;margin-top:8px}
+    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
   </style>
 </head>
 <body>
@@ -59,6 +60,8 @@
     <button class="cancel" onclick="closeForm()">Cancel</button>
   </div>
 
+  <div id="toast"></div>
+
 <script>
 let selectedDate = '';
 
@@ -80,6 +83,17 @@ async function loadUsersIntoDropdown(){
   }
 }
 
+function showToast(msg, timeout=1700){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = msg.toLowerCase().includes('error') ? '#dc3545' : '#28a745';
+  t.style.visibility = 'visible';
+  setTimeout(()=> t.style.visibility = 'hidden', timeout);
+  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
+    try{ window.AppInventor.setWebViewString(msg); }catch(e){}
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function(){
   await loadUsersIntoDropdown();
   const calendarEl = document.getElementById('calendar');
@@ -98,12 +112,16 @@ document.addEventListener('DOMContentLoaded', async function(){
 
 function openForm(){
   document.getElementById('form-popup').style.display = 'block';
-  // ensure users are fresh
   loadUsersIntoDropdown();
 }
 
 function closeForm(){
   document.getElementById('form-popup').style.display = 'none';
+  // clear fields
+  document.getElementById('userName').value = '';
+  document.getElementById('status').value = 'Present';
+  document.getElementById('note').value = '';
+  document.getElementById('comp_off').value = '';
 }
 
 document.getElementById('saveBtn').addEventListener('click', async function(){
@@ -112,8 +130,8 @@ document.getElementById('saveBtn').addEventListener('click', async function(){
   const note = document.getElementById('note').value;
   const comp_off = document.getElementById('comp_off').value;
 
-  if(!name){ notifyApp('Please select user'); return; }
-  if(!selectedDate){ notifyApp('Please select a date'); return; }
+  if(!name){ showToast('Please select user'); return; }
+  if(!selectedDate){ showToast('Please select a date'); return; }
 
   const payload = { name, status, note, comp_off, date: selectedDate };
 
@@ -124,24 +142,15 @@ document.getElementById('saveBtn').addEventListener('click', async function(){
       body: JSON.stringify(payload)
     });
     const j = await res.json();
-    notifyApp(j.message || 'Saved');
+    showToast(j.message || 'Saved');
     closeForm();
-    // reload calendar events
-    location.reload();
+    // reload to show updated events
+    setTimeout(()=>location.reload(), 600);
   }catch(e){
     console.error(e);
-    notifyApp('Error saving attendance');
+    showToast('Error saving attendance');
   }
 });
-
-// send message to App Inventor
-function notifyApp(msg){
-  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
-    window.AppInventor.setWebViewString(msg);
-  } else {
-    alert(msg);
-  }
-}
 </script>
 </body>
 </html>
