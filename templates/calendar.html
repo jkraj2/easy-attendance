@@ -1,74 +1,180 @@
 {% extends "base.html" %}
 {% block title %}Attendance Calendar{% endblock %}
+
 {% block content %}
 <h2>📅 Attendance Calendar</h2>
+
 <div id="calendar"></div>
 
-<!-- Popup -->
-<div id="form-popup" class="popup">
-<h3>Mark Attendance</h3>
-<label>User:</label><select id="userName"></select>
-<label>Status:</label>
-<select id="status">
-<option>Present</option>
-<option>Absent</option>
-<option>Half Day</option>
-<option>Overtime</option>
-</select>
-<label>Shift:</label>
-<select id="shift">
-<option>Morning</option><option>Evening</option><option>Night</option><option>Regular</option><option>All Clear</option>
-</select>
-<label>More Options:</label>
-<select id="moreOptions"><option>Holiday</option><option>Weekly Off</option></select>
-<label>Leave:</label>
-<select id="leave"><option>PL</option><option>CL</option><option>SL</option><option>Other</option></select>
-<label>Notes:</label><textarea id="note"></textarea>
-<button onclick="submitAttendance()">Submit</button>
-<button class="cancel" onclick="closeForm()">Cancel</button>
+<!-- Attendance Form Popup -->
+<div id="attendancePopup" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">Mark Attendance</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-2">
+          <label>User:</label>
+          <select id="popupUser" class="form-select">
+            <option value="">Select User</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label>Status:</label>
+          <select id="popupStatus" class="form-select">
+            <option>Present</option>
+            <option>Absent</option>
+            <option>Half Day</option>
+            <option>Overtime</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label>Shift:</label>
+          <select id="popupShift" class="form-select">
+            <option>Regular</option>
+            <option>Morning</option>
+            <option>Evening</option>
+            <option>Night</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label>More Options:</label>
+          <select id="popupMore" class="form-select">
+            <option value="">None</option>
+            <option>Holiday</option>
+            <option>Weekly Off</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label>Leave:</label>
+          <select id="popupLeave" class="form-select">
+            <option value="">None</option>
+            <option>Privileged Leave (PL)</option>
+            <option>Casual Leave (CL)</option>
+            <option>Sick Leave (SL)</option>
+            <option>Other Leave</option>
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label>Notes:</label>
+          <textarea id="popupNotes" class="form-control" placeholder="Optional"></textarea>
+        </div>
+
+        <div class="mb-2">
+          <strong>Selected Details:</strong>
+          <ul id="selectedDetails" class="list-group list-group-flush small"></ul>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAttendance()">Submit</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-// Load users
+// Fetch users for dropdown
 function loadUsers() {
-fetch("/users-list").then(r=>r.json()).then(users=>{
-let dropdown = document.getElementById("userName");
-dropdown.innerHTML = '<option value="">Select User</option>';
-users.forEach(u=>dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`);
-});
+  fetch("/users-list")
+    .then(res => res.json())
+    .then(users => {
+      const select = document.getElementById("popupUser");
+      select.innerHTML = `<option value="">Select User</option>`;
+      users.forEach(u => select.innerHTML += `<option value="${u.name}">${u.name}</option>`);
+    });
 }
-// Show/Hide popup
-function showPopup(){document.getElementById("form-popup").style.display="block";}
-function closeForm(){document.getElementById("form-popup").style.display="none";}
+
+// Show selected details
+function updateSelectedDetails() {
+  const details = document.getElementById("selectedDetails");
+  const user = document.getElementById("popupUser").value;
+  const status = document.getElementById("popupStatus").value;
+  const shift = document.getElementById("popupShift").value;
+  const more = document.getElementById("popupMore").value;
+  const leave = document.getElementById("popupLeave").value;
+  const notes = document.getElementById("popupNotes").value;
+
+  details.innerHTML = '';
+  if(user) details.innerHTML += `<li>User: ${user}</li>`;
+  if(status) details.innerHTML += `<li>Status: ${status}</li>`;
+  if(shift) details.innerHTML += `<li>Shift: ${shift}</li>`;
+  if(more) details.innerHTML += `<li>More: ${more}</li>`;
+  if(leave) details.innerHTML += `<li>Leave: ${leave}</li>`;
+  if(notes) details.innerHTML += `<li>Notes: ${notes}</li>`;
+}
+
+// Attach event listeners
+["popupUser","popupStatus","popupShift","popupMore","popupLeave","popupNotes"].forEach(id=>{
+  document.getElementById(id).addEventListener("change", updateSelectedDetails);
+  document.getElementById(id).addEventListener("input", updateSelectedDetails);
+});
 
 // Submit attendance
-function submitAttendance(){
-const data={
-name:document.getElementById("userName").value,
-status:document.getElementById("status").value,
-shift:document.getElementById("shift").value,
-moreOptions:document.getElementById("moreOptions").value,
-leave:document.getElementById("leave").value,
-note:document.getElementById("note").value,
-date:new Date().toISOString().split("T")[0]
-};
-if(!data.name){alert("Select User");return;}
-fetch("/mark",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
-.then(r=>r.json()).then(d=>{alert(d.message); closeForm(); location.reload();});
+function submitAttendance() {
+  const data = {
+    name: document.getElementById("popupUser").value,
+    status: document.getElementById("popupStatus").value,
+    shift: document.getElementById("popupShift").value,
+    moreOptions: document.getElementById("popupMore").value,
+    leave: document.getElementById("popupLeave").value,
+    note: document.getElementById("popupNotes").value,
+    date: selectedDate
+  };
+
+  if(!data.name){
+    alert("Please select a user!");
+    return;
+  }
+
+  fetch("/mark", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(d => {
+    alert(d.message);
+    calendar.refetchEvents();
+    bootstrap.Modal.getInstance(document.getElementById("attendancePopup")).hide();
+  });
 }
 
-// Calendar
-document.addEventListener("DOMContentLoaded", function(){
-loadUsers();
-var calendarEl = document.getElementById('calendar');
-var calendar = new FullCalendar.Calendar(calendarEl,{
-initialView:'dayGridMonth',
-headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
-events:'/events',
-eventClick:function(info){alert(info.event.title);}
-});
-calendar.render();
+// FullCalendar setup
+let calendar;
+let selectedDate = null;
+document.addEventListener("DOMContentLoaded", function() {
+  loadUsers();
+
+  const calendarEl = document.getElementById('calendar');
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    height: 'auto',
+    selectable: true,
+    dateClick: function(info){
+      selectedDate = info.dateStr;
+      const modal = new bootstrap.Modal(document.getElementById("attendancePopup"));
+      modal.show();
+      updateSelectedDetails();
+    },
+    events: '/events'
+  });
+
+  calendar.render();
 });
 </script>
 {% endblock %}
