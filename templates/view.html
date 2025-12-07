@@ -13,6 +13,7 @@
     th{background:#0d6efd;color:#fff;padding:12px;text-align:left}
     td{padding:10px;border-bottom:1px solid #f2f4f8}
     @media(max-width:600px){table{font-size:13px}}
+    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
   </style>
 </head>
 <body>
@@ -43,5 +44,20 @@
       </tbody>
     </table>
   </div>
+
+  <div id="toast"></div>
+
+<script>
+function showToast(msg, timeout=1700){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = msg.toLowerCase().includes('error') ? '#dc3545' : '#28a745';
+  t.style.visibility = 'visible';
+  setTimeout(()=> t.style.visibility = 'hidden', timeout);
+  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
+    try{ window.AppInventor.setWebViewString(msg); }catch(e){}
+  }
+}
+</script>
 </body>
 </html>
