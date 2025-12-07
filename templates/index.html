@@ -1,260 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Attendance Dashboard</title>
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-  <!-- Font Awesome for icons -->
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
   <style>
-    body {
-      margin: 0;
-      font-family: "Inter", sans-serif;
-      background-color: #f4f6f8;
-    }
-
-    header {
-      background-color: #007bff;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 28px;
-      font-weight: 600;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 40px auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 30px;
-      padding: 0 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      text-align: center;
-      padding: 40px 20px;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-    }
-
-    .card i {
-      font-size: 50px;
-      margin-bottom: 15px;
-      color: #007bff;
-    }
-
-    .card h3 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    @media (max-width: 600px) {
-      header {
-        font-size: 22px;
-        padding: 15px;
-      }
-      .card i {
-        font-size: 40px;
-      }
-      .card h3 {
-        font-size: 18px;
-      }
-    }
+    body{font-family:Inter, sans-serif;margin:0;background:#f4f6f9}
+    .topbar{width:100%;background:#0d6efd;padding:12px 16px;color:#fff;display:flex;align-items:center;justify-content:space-between;font-weight:700;position:sticky;top:0;z-index:999}
+    .topbar div{cursor:pointer;display:flex;align-items:center}
+    .container{max-width:1100px;margin:18px auto;padding:0 12px}
+    .summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+    .card{padding:16px;border-radius:12px;color:#fff;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+    .card h3{margin:0;font-size:14px;font-weight:700}
+    .card p{margin:8px 0 0;font-size:20px;font-weight:800}
+    .card.total{background:#3b82f6}
+    .card.present{background:#16a34a}
+    .card.absent{background:#ef4444}
+    .card.half{background:#f59e0b;color:#222}
+    .card.other{background:#7c3aed}
+    .nav-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:12px}
+    .nav-card{background:#fff;padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);text-align:center;cursor:pointer}
+    .nav-card h4{margin:8px 0 0}
+    @media(max-width:420px){.card p{font-size:18px}}
   </style>
 </head>
 <body>
-<!-- TOP NAVBAR -->
-<div style="
-  width: 100%;
-  background: #0d6efd;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: white;
-  font-size: 18px;
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  z-index: 9999;">
-  
-  <!-- Home Icon -->
-  <div onclick="window.location.href='/'" style="cursor:pointer; display:flex; align-items:center;">
-    🏠 <span style="margin-left:6px;">Home</span>
+  <div class="topbar">
+    <div onclick="location.href='/'">🏠 <span style="margin-left:8px">Home</span></div>
+    <div onclick="location.href='/user'">➕ <span style="margin-left:8px">Add User</span></div>
   </div>
-
-  <!-- Add User Icon -->
-  <div onclick="window.location.href='/user'" style="cursor:pointer; display:flex; align-items:center;">
-    ➕ <span style="margin-left:6px;">Add User</span>
-  </div>
-
-</div>
-
-  <header>📌 Attendance Dashboard</header>
 
   <div class="container">
-    <div class="card" onclick="location.href='/calendar'">
-      <i class="fas fa-calendar-check"></i>
-      <h3>📅 Mark Attendance</h3>
+    <h2 style="margin:14px 0 8px">📌 Attendance Dashboard</h2>
+
+    <div class="summary-cards" id="summaryCards">
+      <div class="card total"><h3>Total</h3><p id="sumTotal">0</p></div>
+      <div class="card present"><h3>Present</h3><p id="sumPresent">0</p></div>
+      <div class="card absent"><h3>Absent</h3><p id="sumAbsent">0</p></div>
+      <div class="card half"><h3>Half Day</h3><p id="sumHalf">0</p></div>
+      <div class="card other"><h3>PL/SL/Comp-Off</h3><p id="sumOther">0</p></div>
     </div>
 
-    <div class="card" onclick="location.href='/view'">
-      <i class="fas fa-chart-bar"></i>
-      <h3>📊 View Attendance Records</h3>
+    <div class="nav-cards">
+      <div class="nav-card" onclick="location.href='/calendar'">
+        <div style="font-size:28px">📅</div>
+        <h4>Mark Attendance</h4>
+      </div>
+
+      <div class="nav-card" onclick="location.href='/view'">
+        <div style="font-size:28px">📊</div>
+        <h4>View Attendance</h4>
+      </div>
+
+      <div class="nav-card" onclick="location.href='/all-records'">
+        <div style="font-size:28px">📋</div>
+        <h4>Global Records</h4>
+      </div>
+
+      <div class="nav-card" onclick="location.href='/user'">
+        <div style="font-size:28px">👥</div>
+        <h4>Add User</h4>
+      </div>
     </div>
   </div>
-<div class="card" onclick="location.href='/all-records'">
-  <i class="fas fa-table"></i>
-  <h3>📋 View All Employees Attendance </h3>
-</div>
-  
-<!-- Attendance Summary -->
-<!--<div id="attendanceSummary" class="attendance-summary">
-  <div class="pill">Total: <span id="sumTotal">0</span></div>
-  <div class="pill">Present: <span id="sumPresent">0</span></div>
-  <div class="pill">Absent: <span id="sumAbsent">0</span></div>
-  <div class="pill">Half-Day: <span id="sumHalf">0</span></div>
-  <div class="pill">PL/SL/Comp-Off: <span id="sumOther">0</span></div>
-</div>-->
-
-
-  <div class="summary-cards">
-  
-  <div class="card total">
-    <h3>Total</h3>
-    <p id="sumTotal">0</p>
-  </div>
-
-  <div class="card present">
-    <h3>Present</h3>
-    <p id="sumPresent">0</p>
-  </div>
-
-  <div class="card absent">
-    <h3>Absent</h3>
-    <p id="sumAbsent">0</p>
-  </div>
-
-  <div class="card halfday">
-    <h3>Half Day</h3>
-    <p id="sumHalf">0</p>
-  </div>
-
-  <div class="card other">
-    <h3>PL / SL / Comp-Off</h3>
-    <p id="sumOther">0</p>
-  </div>
-
-</div>
-
 
 <script>
-async function loadHomeSummary() {
-  try {
+async function loadSummary(){
+  try{
     const res = await fetch('/events');
     const events = await res.json();
-
-    let total = events.length;
-    let present = 0;
-    let absent = 0;
-    let half = 0;
-    let other = 0;
-
-    events.forEach(ev => {
-      let status = '';
-
-      // Extract "Name - Status"
-      if (ev.title && ev.title.includes(' - ')) {
-        status = ev.title.split(' - ').pop().trim();
-      }
-
-      if (status === "Present") present++;
-      else if (status === "Absent") absent++;
-      else if (status === "Half Day" || status === "Half-Day") half++;
-      else if (status) other++; // PL / SL / Comp-Off / Week Off etc.
+    let total = events.length, present=0, absent=0, half=0, other=0;
+    events.forEach(ev=>{
+      const s = (ev.title && ev.title.includes(' - ')) ? ev.title.split(' - ').pop().trim() : '';
+      if(s==='Present') present++;
+      else if(s==='Absent') absent++;
+      else if(s==='Half Day' || s==='Half-Day') half++;
+      else if(s) other++;
     });
-
     document.getElementById('sumTotal').innerText = total;
     document.getElementById('sumPresent').innerText = present;
     document.getElementById('sumAbsent').innerText = absent;
     document.getElementById('sumHalf').innerText = half;
     document.getElementById('sumOther').innerText = other;
-
-  } catch (err) {
-    console.error("Error loading summary:", err);
-  }
-}
-
-loadHomeSummary();
-</script>
-
-  <script>
-async function loadHomeSummary() {
-  try {
-    const res = await fetch('/events');
-    const events = await res.json();
-
-    let total = events.length;
-    let present = 0;
-    let absent = 0;
-    let half = 0;
-    let other = 0;
-
-    events.forEach(ev => {
-      let status = "";
-
-      if (ev.title.includes(" - ")) {
-        status = ev.title.split(" - ").pop().trim();
-      }
-
-      if (status === "Present") present++;
-      else if (status === "Absent") absent++;
-      else if (status === "Half Day" || status === "Half-Day") half++;
-      else other++;
-    });
-
-    document.getElementById("sumTotal").innerText = total;
-    document.getElementById("sumPresent").innerText = present;
-    document.getElementById("sumAbsent").innerText = absent;
-    document.getElementById("sumHalf").innerText = half;
-    document.getElementById("sumOther").innerText = other;
-
-  } catch (error) {
-    console.error("Summary load error:", error);
-  }
-}
-
-loadHomeSummary();
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    if (window.Android) {
-        localStorage.setItem("support", "true");
+    // For AppInventor: notify when needed (optional)
+    if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
+      // no automatic notifications here — only on save actions
     }
-});
+  }catch(e){
+    console.error('Summary load error', e);
+  }
+}
+document.addEventListener('DOMContentLoaded', loadSummary);
 </script>
-
 </body>
 </html>
