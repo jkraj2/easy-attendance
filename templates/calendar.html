@@ -1,199 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Attendance Calendar</title>
-
-<!-- FullCalendar CSS & JS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-<style>
-/* Popup styles */
-.popup {
-    display: none;
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    z-index: 9999;
-    width: 90%;
-    max-width: 400px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-}
-.popup h3 { text-align:center; margin-bottom: 15px; }
-.popup label { margin-top: 10px; display:block; font-weight:600; }
-.popup input, .popup select, .popup textarea {
-    width: 100%;
-    padding:8px;
-    margin-top:5px;
-    border-radius:6px;
-    border:1px solid #ccc;
-}
-.popup button { margin-top:15px; padding:10px; width:48%; }
-.popup button.cancel { background:#ccc; color:#000; }
-</style>
-</head>
-<body>
-
-<!-- Sidebar -->
-<div id="menuToggle">☰</div>
-<div class="sidebar" id="sidebar">
-    <ul>
-        <li onclick="window.location.href='/'">🏠 Home</li>
-        <li onclick="window.location.href='/calendar'">📅 Calendar</li>
-        <li onclick="window.location.href='/all-records'">📋 Global Records</li>
-        <li onclick="window.location.href='/user'">➕ Add User</li>
-        <li onclick="window.location.href='/view'">👁️ View Attendance</li>
-    </ul>
-</div>
-
-<div style="margin-left:0px; padding: 20px;">
+{% extends "base.html" %}
+{% block title %}Attendance Calendar{% endblock %}
+{% block content %}
 <h2>📅 Attendance Calendar</h2>
 <div id="calendar"></div>
-</div>
 
-<!-- Attendance Popup -->
+<!-- Popup -->
 <div id="form-popup" class="popup">
 <h3>Mark Attendance</h3>
-
-<label>User:</label>
-<select id="userName"></select>
-
+<label>User:</label><select id="userName"></select>
 <label>Status:</label>
 <select id="status">
-    <option value="Present">Present</option>
-    <option value="Absent">Absent</option>
-    <option value="Half Day">Half Day</option>
-    <option value="Overtime">Overtime</option>
+<option>Present</option>
+<option>Absent</option>
+<option>Half Day</option>
+<option>Overtime</option>
 </select>
-
 <label>Shift:</label>
 <select id="shift">
-    <option value="Morning">Morning</option>
-    <option value="Evening">Evening</option>
-    <option value="Night">Night</option>
-    <option value="Regular">Regular</option>
-    <option value="All Clear">All Clear</option>
+<option>Morning</option><option>Evening</option><option>Night</option><option>Regular</option><option>All Clear</option>
 </select>
-
 <label>More Options:</label>
-<select id="moreOptions">
-    <option value="">-- Select --</option>
-    <option value="Holiday">Holiday</option>
-    <option value="Weekly Off">Weekly Off</option>
-</select>
-
+<select id="moreOptions"><option>Holiday</option><option>Weekly Off</option></select>
 <label>Leave:</label>
-<select id="leave">
-    <option value="">-- Select --</option>
-    <option value="PL">Privileged Leave (PL)</option>
-    <option value="CL">Casual Leave (CL)</option>
-    <option value="SL">Sick Leave (SL)</option>
-    <option value="Other">Other Leave</option>
-</select>
-
-<label>Notes:</label>
-<textarea id="note"></textarea>
-
+<select id="leave"><option>PL</option><option>CL</option><option>SL</option><option>Other</option></select>
+<label>Notes:</label><textarea id="note"></textarea>
 <button onclick="submitAttendance()">Submit</button>
 <button class="cancel" onclick="closeForm()">Cancel</button>
 </div>
-
+{% endblock %}
+{% block scripts %}
 <script>
-// Sidebar toggle
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
-menuToggle.addEventListener('click', ()=>sidebar.classList.toggle('active'));
-
-// Load users for dropdown
+// Load users
 function loadUsers() {
-    fetch("/users-list")
-    .then(res=>res.json())
-    .then(users=>{
-        const dropdown = document.getElementById("userName");
-        dropdown.innerHTML = `<option value="">Select User</option>`;
-        users.forEach(u=>{
-            dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`;
-        });
-    });
+fetch("/users-list").then(r=>r.json()).then(users=>{
+let dropdown = document.getElementById("userName");
+dropdown.innerHTML = '<option value="">Select User</option>';
+users.forEach(u=>dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`);
+});
 }
-
-// Show popup
-function showPopup(record=null) {
-    document.getElementById("form-popup").style.display = "block";
-    if(record){
-        document.getElementById("userName").value = record.name;
-        document.getElementById("status").value = record.status;
-        document.getElementById("shift").value = record.shift || "Regular";
-        document.getElementById("moreOptions").value = record.moreOptions || "";
-        document.getElementById("leave").value = record.leave || "";
-        document.getElementById("note").value = record.note || "";
-    }
-}
-
-// Close popup
-function closeForm(){ document.getElementById("form-popup").style.display="none"; }
+// Show/Hide popup
+function showPopup(){document.getElementById("form-popup").style.display="block";}
+function closeForm(){document.getElementById("form-popup").style.display="none";}
 
 // Submit attendance
 function submitAttendance(){
-    const data = {
-        name: document.getElementById("userName").value,
-        status: document.getElementById("status").value,
-        shift: document.getElementById("shift").value,
-        moreOptions: document.getElementById("moreOptions").value,
-        leave: document.getElementById("leave").value,
-        note: document.getElementById("note").value,
-        date: new Date().toISOString().split("T")[0]
-    };
-
-    if(!data.name){ alert("Select User"); return; }
-
-    fetch("/mark",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(data)
-    })
-    .then(res=>res.json())
-    .then(d=>{
-        alert(d.message); // MIT WebView notification
-        closeForm();
-        location.reload();
-    });
+const data={
+name:document.getElementById("userName").value,
+status:document.getElementById("status").value,
+shift:document.getElementById("shift").value,
+moreOptions:document.getElementById("moreOptions").value,
+leave:document.getElementById("leave").value,
+note:document.getElementById("note").value,
+date:new Date().toISOString().split("T")[0]
+};
+if(!data.name){alert("Select User");return;}
+fetch("/mark",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+.then(r=>r.json()).then(d=>{alert(d.message); closeForm(); location.reload();});
 }
 
-// Initialize Calendar
+// Calendar
 document.addEventListener("DOMContentLoaded", function(){
-    loadUsers();
-
-    const calendarEl = document.getElementById("calendar");
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        headerToolbar:{
-            left:"prev,next today",
-            center:"title",
-            right:"dayGridMonth,timeGridWeek,timeGridDay,listWeek"
-        },
-        events:"/events",
-        eventClick:function(info){
-            const rec = info.event.extendedProps;
-            showPopup({
-                name: info.event.title.split(" - ")[0],
-                status: info.event.title.split(" - ")[1],
-                shift: rec.shift,
-                moreOptions: rec.moreOptions,
-                leave: rec.leave,
-                note: rec.note
-            });
-        }
-    });
-    calendar.render();
+loadUsers();
+var calendarEl = document.getElementById('calendar');
+var calendar = new FullCalendar.Calendar(calendarEl,{
+initialView:'dayGridMonth',
+headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,timeGridDay,listWeek'},
+events:'/events',
+eventClick:function(info){alert(info.event.title);}
+});
+calendar.render();
 });
 </script>
-</body>
-</html>
+{% endblock %}
