@@ -1,25 +1,172 @@
 {% extends "base.html" %}
 {% block title %}Global Attendance Records{% endblock %}
+
 {% block content %}
 <h2>📋 Global Attendance Records</h2>
-<table class="table table-striped table-bordered mt-3">
-<thead class="table-primary">
-<tr>
-<th>Date</th><th>Name</th><th>Status</th><th>Shift</th><th>More Options</th><th>Leave</th><th>Notes</th>
-</tr>
-</thead>
-<tbody>
-{% for r in records %}
-<tr>
-<td>{{ r.date }}</td>
-<td>{{ r.name }}</td>
-<td>{{ r.status }}</td>
-<td>{{ r.shift or '' }}</td>
-<td>{{ r.moreOptions or '' }}</td>
-<td>{{ r.leave or '' }}</td>
-<td>{{ r.note or '' }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+
+<!-- Filters & Search -->
+<div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+  <input id="searchInput" class="form-control" type="search" placeholder="Search by name, note, status...">
+  
+  <select id="statusFilter" class="form-select">
+    <option value="ALL">All Status</option>
+    <option>Present</option>
+    <option>Absent</option>
+    <option>Half Day</option>
+    <option>PL</option>
+    <option>CL</option>
+    <option>SL</option>
+    <option>Other</option>
+    <option>Holiday</option>
+    <option>Weekly Off</option>
+  </select>
+
+  <select id="nameFilter" class="form-select">
+    <option value="ALL">All Employees</option>
+  </select>
+
+  <input type="date" id="fromDate" class="form-control">
+  <input type="date" id="toDate" class="form-control">
+
+  <button class="btn btn-secondary" id="clearFilters">Clear</button>
+
+  <div class="ms-auto d-flex gap-1">
+    <button class="btn btn-primary" id="exportCsv">CSV</button>
+    <button class="btn btn-success" id="exportExcel">Excel</button>
+    <button class="btn btn-danger" id="exportPdf">PDF</button>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <div class="badge bg-primary">Total: <span id="totalCount">0</span></div>
+  <div class="badge bg-success">Present: <span id="countPresent">0</span></div>
+  <div class="badge bg-danger">Absent: <span id="countAbsent">0</span></div>
+  <div class="badge bg-warning text-dark">Half-Day: <span id="countHalf">0</span></div>
+  <div class="badge bg-info text-dark">Leaves: <span id="countLeave">0</span></div>
+</div>
+
+<!-- Table -->
+<div class="table-responsive">
+  <table class="table table-striped table-bordered" id="recordsTable">
+    <thead class="table-primary">
+      <tr>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Shift</th>
+        <th>More Options</th>
+        <th>Leave</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td>{{ r.date }}</td>
+        <td>{{ r.name }}</td>
+        <td>{{ r.status }}</td>
+        <td>{{ r.shift or '' }}</td>
+        <td>{{ r.moreOptions or '' }}</td>
+        <td>{{ r.leave or '' }}</td>
+        <td>{{ r.note or '' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Export Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+// Populate Name filter
+fetch("/users-list").then(r=>r.json()).then(users=>{
+  let nameFilter = document.getElementById("nameFilter");
+  users.forEach(u=>nameFilter.innerHTML += `<option>${u.name}</option>`);
+});
+
+// Filtering function
+function filterTable() {
+  const table = document.getElementById("recordsTable").tBodies[0];
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const status = document.getElementById("statusFilter").value;
+  const name = document.getElementById("nameFilter").value;
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+
+  let total=0, present=0, absent=0, half=0, leave=0;
+
+  Array.from(table.rows).forEach(row=>{
+    const rowDate = row.cells[0].textContent;
+    const rowName = row.cells[1].textContent;
+    const rowStatus = row.cells[2].textContent.toLowerCase();
+    const rowLeave = row.cells[5].textContent;
+
+    let show=true;
+
+    if(search && !Array.from(row.cells).some(c=>c.textContent.toLowerCase().includes(search))) show=false;
+    if(status!=="ALL" && rowStatus!==status.toLowerCase()) show=false;
+    if(name!=="ALL" && rowName!==name) show=false;
+    if(from && rowDate<from) show=false;
+    if(to && rowDate>to) show=false;
+
+    row.style.display=show?'':'none';
+
+    if(show){
+      total++;
+      if(rowStatus==='present') present++;
+      else if(rowStatus==='absent') absent++;
+      else if(rowStatus==='half day') half++;
+      if(rowLeave) leave++;
+    }
+  });
+
+  document.getElementById("totalCount").textContent = total;
+  document.getElementById("countPresent").textContent = present;
+  document.getElementById("countAbsent").textContent = absent;
+  document.getElementById("countHalf").textContent = half;
+  document.getElementById("countLeave").textContent = leave;
+}
+
+// Event listeners
+document.getElementById("searchInput").addEventListener("input", filterTable);
+document.getElementById("statusFilter").addEventListener("change", filterTable);
+document.getElementById("nameFilter").addEventListener("change", filterTable);
+document.getElementById("fromDate").addEventListener("change", filterTable);
+document.getElementById("toDate").addEventListener("change", filterTable);
+document.getElementById("clearFilters").addEventListener("click", ()=>{
+  document.getElementById("searchInput").value='';
+  document.getElementById("statusFilter").value='ALL';
+  document.getElementById("nameFilter").value='ALL';
+  document.getElementById("fromDate").value='';
+  document.getElementById("toDate").value='';
+  filterTable();
+});
+
+// Export functions
+document.getElementById("exportCsv").addEventListener("click", ()=>{
+  let table = document.getElementById("recordsTable");
+  let wb = XLSX.utils.table_to_book(table, {sheet:"Attendance"});
+  XLSX.writeFile(wb, "Attendance.csv");
+});
+document.getElementById("exportExcel").addEventListener("click", ()=>{
+  let table = document.getElementById("recordsTable");
+  let wb = XLSX.utils.table_to_book(table, {sheet:"Attendance"});
+  XLSX.writeFile(wb, "Attendance.xlsx");
+});
+document.getElementById("exportPdf").addEventListener("click", ()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.autoTable({html:"#recordsTable"});
+  doc.save("Attendance.pdf");
+});
+
+// Initial filter call
+filterTable();
+</script>
 {% endblock %}
