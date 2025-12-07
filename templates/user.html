@@ -14,6 +14,7 @@
     .form-row label{display:block;margin-bottom:6px;font-weight:600}
     input{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
     button{width:100%;padding:12px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-weight:700;margin-top:14px}
+    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
   </style>
 </head>
 <body>
@@ -50,7 +51,22 @@
     </div>
   </div>
 
+  <div id="toast"></div>
+
 <script>
+function showToast(msg, timeout=1700){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.visibility = 'visible';
+  // green for success, red for errors
+  t.style.background = msg.toLowerCase().includes('error') ? '#dc3545' : '#28a745';
+  setTimeout(()=> t.style.visibility = 'hidden', timeout);
+  // also send to App Inventor if present
+  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
+    try{ window.AppInventor.setWebViewString(msg); }catch(e){/*ignore*/ }
+  }
+}
+
 async function saveUser(){
   const data = {
     name: document.getElementById('name').value.trim(),
@@ -58,8 +74,7 @@ async function saveUser(){
     salary: document.getElementById('salary').value.trim(),
     company: document.getElementById('company').value.trim()
   };
-  // basic validation
-  if(!data.name){ notifyApp('Please enter name'); return; }
+  if(!data.name){ showToast('Please enter name'); return; }
   try{
     const res = await fetch('/save-user', {
       method:'POST',
@@ -67,22 +82,12 @@ async function saveUser(){
       body: JSON.stringify(data)
     });
     const json = await res.json();
-    notifyApp(json.message || 'User saved');
-    // optionally clear form
+    showToast(json.message || 'User saved');
+    // clear form
     document.getElementById('name').value=''; document.getElementById('email').value=''; document.getElementById('salary').value=''; document.getElementById('company').value='';
   }catch(e){
     console.error(e);
-    notifyApp('Server error saving user');
-  }
-}
-
-// send message to App Inventor (if present) else fallback to console/alert
-function notifyApp(msg){
-  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
-    window.AppInventor.setWebViewString(msg);
-  } else {
-    // normal browser fallback
-    alert(msg);
+    showToast('Error saving user');
   }
 }
 </script>
