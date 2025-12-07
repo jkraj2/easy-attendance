@@ -6,7 +6,7 @@ app = Flask(__name__)
 DATA_FILE = "attendance_data/data.json"
 USER_FILE = "attendance_data/users.json"
 
-# ----------------- LOAD DATA -----------------
+# ----------------- HELPER FUNCTIONS -----------------
 def load_data():
     if not os.path.exists(DATA_FILE):
         return []
@@ -16,10 +16,24 @@ def load_data():
     except:
         return []
 
-# ----------------- SAVE DATA -----------------
 def save_data(data):
+    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
+
+def load_users():
+    if not os.path.exists(USER_FILE):
+        return []
+    try:
+        with open(USER_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_users(users):
+    os.makedirs(os.path.dirname(USER_FILE), exist_ok=True)
+    with open(USER_FILE, "w") as f:
+        json.dump(users, f, indent=4)
 
 # ----------------- ROUTES -----------------
 @app.route("/")
@@ -37,88 +51,61 @@ def view():
 
 @app.route("/all-records")
 def all_records():
-    data = load_data()
-    data_sorted = sorted(data, key=lambda x: x["date"], reverse=True)
-    return render_template("all_records.html", records=data_sorted)
-
-# ---------- API: GET EVENTS FOR CALENDAR ----------
-@app.route("/events")
-def events():
-    events = []
-    data = load_data()
-
-    for rec in data:
-        events.append({
-            "title": f"{rec['name']} - {rec['status']}",
-            "start": rec["date"],
-            "extendedProps": {
-                "note": rec["note"],
-                "comp_off": rec["comp_off"]
-            }
-        })
-
-    return jsonify(events)
+    return render_template("all_records.html")
 
 @app.route("/user")
 def user_page():
     return render_template("user.html")
 
-# ---------- SAVE USER ----------
+# ----------------- API ENDPOINTS -----------------
 @app.route("/save-user", methods=["POST"])
 def save_user():
     data = request.json
-
-    # Load users
-    if os.path.exists(USER_FILE):
-        with open(USER_FILE, "r") as f:
-            users = json.load(f)
-    else:
-        users = []
-
-    # Add ID for future use
-    data["id"] = len(users) + 1
-
+    users = load_users()
     users.append(data)
+    save_users(users)
+    return jsonify({"message": "User saved successfully!"})
 
-    # Save users
-    with open(USER_FILE, "w") as f:
-        json.dump(users, f, indent=2)
-
-    return jsonify({"message": "User Saved Successfully!"})
-
-# ---------- GET USERS FOR CALENDAR ----------
 @app.route("/users-list")
 def users_list():
-    if os.path.exists(USER_FILE):
-        with open(USER_FILE, "r") as f:
-            users = json.load(f)
-    else:
-        users = []
-
+    users = load_users()
     return jsonify(users)
 
-# ---------- SAVE ATTENDANCE ----------
 @app.route("/mark", methods=["POST"])
-def mark():
+def mark_attendance():
     record = request.json
     data = load_data()
     data.append(record)
     save_data(data)
-
     return jsonify({"message": "Attendance saved successfully!"})
 
-# ---------- GET USERS FOR USER LIST PAGE ----------
-@app.route("/get-users")
-def get_users():
-    if not os.path.exists(USER_FILE):
-        return jsonify({"users": []})
+@app.route("/events")
+def events():
+    data = load_data()
+    events = []
+    for rec in data:
+        events.append({
+            "title": f"{rec['name']} - {rec['status']}",
+            "start": rec["date"],
+            "extendedProps": {
+                "note": rec.get("note", ""),
+                "comp_off": rec.get("comp_off", "")
+            }
+        })
+    return jsonify(events)
 
-    with open(USER_FILE, "r") as f:
-        users = json.load(f)
+@app.route("/all-records-json")
+def all_records_json():
+    data = load_data()
+    return jsonify({"records": data})
 
+@app.route("/all-users-json")
+def all_users_json():
+    users = load_users()
     return jsonify({"users": users})
 
-# ----------------- RENDER PORT FIX FOR RENDER.COM -----------------
+# ----------------- RUN SERVER -----------------
 if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)
