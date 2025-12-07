@@ -3,114 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Attendance App{% endblock %}</title>
+  <title>{{ title }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
     body {
       font-family: 'Inter', sans-serif;
-      margin: 0;
-      overflow-x: hidden;
     }
-
     /* Sidebar */
-    .sidebar {
-      height: 100%;
-      width: 0;
+    #sidebar {
       position: fixed;
-      z-index: 1000;
+      left: -250px;
       top: 0;
-      left: 0;
-      background-color: #0d6efd;
-      overflow-x: hidden;
+      width: 250px;
+      height: 100%;
+      background: #0d6efd;
+      color: white;
       transition: 0.3s;
       padding-top: 60px;
+      z-index: 9999;
     }
-
-    .sidebar a {
-      padding: 12px 24px;
-      text-decoration: none;
-      font-size: 18px;
-      color: white;
-      display: block;
-      transition: 0.2s;
+    #sidebar.active {
+      left: 0;
     }
-
-    .sidebar a:hover {
-      background-color: #0950c1;
-      color: white;
-      border-radius: 6px;
+    #sidebar ul {
+      list-style: none;
+      padding: 0;
     }
-
-    .sidebar .closebtn {
-      position: absolute;
+    #sidebar ul li {
+      padding: 12px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    #sidebar ul li:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    #sidebar ul li i {
+      margin-right: 10px;
+    }
+    #menu-btn {
+      position: fixed;
       top: 12px;
-      right: 20px;
-      font-size: 28px;
+      left: 12px;
+      z-index: 10000;
+      font-size: 24px;
+      cursor: pointer;
+      color: #0d6efd;
     }
-
-    /* Main content */
-    .main-content {
+    .content {
+      margin-left: 0;
       transition: margin-left 0.3s;
       padding: 20px;
     }
-
-    /* Topbar */
-    .topbar {
-      width: 100%;
-      background: #0d6efd;
-      color: white;
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      font-size: 18px;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 999;
-    }
-
-    .topbar .menu-icon {
-      cursor: pointer;
-      margin-right: 12px;
-      font-size: 22px;
+    .content.shifted {
+      margin-left: 250px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <div id="mySidebar" class="sidebar">
-    <a href="javascript:void(0)" class="closebtn" onclick="closeSidebar()">×</a>
-    <a href="/">🏠 Home</a>
-    <a href="/user">➕ Add User</a>
-    <a href="/calendar">📅 Attendance Calendar</a>
-    <a href="/all-records">📋 Global Attendance</a>
-    <a href="/view-users">👤 View Users</a>
-  </div>
+<!-- Menu Button -->
+<div id="menu-btn">☰</div>
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <span class="menu-icon" onclick="openSidebar()">☰</span>
-    {% block header %}Attendance App{% endblock %}
-  </div>
+<!-- Sidebar Menu -->
+<div id="sidebar">
+  <ul>
+    <li onclick="window.location.href='/'"><i>🏠</i> Home</li>
+    <li onclick="window.location.href='/calendar'"><i>📅</i> Calendar</li>
+    <li onclick="window.location.href='/all-records'"><i>📋</i> Global Records</li>
+    <li onclick="window.location.href='/user'"><i>➕</i> Add User</li>
+    <li onclick="window.location.href='/view'"><i>👁️</i> View Attendance</li>
+    <li onclick="window.location.href='/view-users'"><i>👥</i> View Users</li>
+  </ul>
+</div>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    {% block content %}{% endblock %}
-  </div>
+<!-- Page Content -->
+<div class="content" id="pageContent">
+  {% block content %}
+  {% endblock %}
+</div>
 
-  <script>
-    function openSidebar() {
-      document.getElementById("mySidebar").style.width = "250px";
-      document.querySelector(".main-content").style.marginLeft = "250px";
-    }
-    function closeSidebar() {
-      document.getElementById("mySidebar").style.width = "0";
-      document.querySelector(".main-content").style.marginLeft = "0";
-    }
-  </script>
+<script>
+const menuBtn = document.getElementById("menu-btn");
+const sidebar = document.getElementById("sidebar");
+const content = document.getElementById("pageContent");
 
-  {% block scripts %}{% endblock %}
+menuBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("active");
+  content.classList.toggle("shifted");
+});
+</script>
+
 </body>
 </html>
