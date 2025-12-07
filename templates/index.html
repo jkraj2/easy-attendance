@@ -1,107 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Attendance Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    body{font-family:Inter, sans-serif;margin:0;background:#f4f6f9}
-    .topbar{width:100%;background:#0d6efd;padding:12px 16px;color:#fff;display:flex;align-items:center;justify-content:space-between;font-weight:700;position:sticky;top:0;z-index:999}
-    .topbar div{cursor:pointer;display:flex;align-items:center}
-    .container{max-width:1100px;margin:18px auto;padding:0 12px}
-    .summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
-    .card{padding:16px;border-radius:12px;color:#fff;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
-    .card h3{margin:0;font-size:14px;font-weight:700}
-    .card p{margin:8px 0 0;font-size:20px;font-weight:800}
-    .card.total{background:#3b82f6}
-    .card.present{background:#16a34a}
-    .card.absent{background:#ef4444}
-    .card.half{background:#f59e0b;color:#222}
-    .card.other{background:#7c3aed}
-    .nav-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:12px}
-    .nav-card{background:#fff;padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);text-align:center;cursor:pointer}
-    .nav-card h4{margin:8px 0 0}
-    @media(max-width:420px){.card p{font-size:18px}}
-    /* toast */
-    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <div onclick="location.href='/'">🏠 <span style="margin-left:8px">Home</span></div>
-    <div onclick="location.href='/user'">➕ <span style="margin-left:8px">Add User</span></div>
+{% extends "base.html" %}
+
+{% block title %}Home - Attendance App{% endblock %}
+
+{% block content %}
+<h2>📌 Attendance Dashboard</h2>
+<p>Use the menu to navigate: Mark Attendance, View Records, Global Records, or Add Users.</p>
+
+<div class="d-flex gap-3 mt-4 flex-wrap">
+  <div class="card p-3 text-center" style="width: 200px;">
+    <h4>Total</h4>
+    <p id="totalCount">0</p>
   </div>
-
-  <div class="container">
-    <h2 style="margin:14px 0 8px">📌 Attendance Dashboard</h2>
-
-    <div class="summary-cards" id="summaryCards">
-      <div class="card total"><h3>Total</h3><p id="sumTotal">0</p></div>
-      <div class="card present"><h3>Present</h3><p id="sumPresent">0</p></div>
-      <div class="card absent"><h3>Absent</h3><p id="sumAbsent">0</p></div>
-      <div class="card half"><h3>Half Day</h3><p id="sumHalf">0</p></div>
-      <div class="card other"><h3>PL/SL/Comp-Off</h3><p id="sumOther">0</p></div>
-    </div>
-
-    <div class="nav-cards">
-      <div class="nav-card" onclick="location.href='/calendar'">
-        <div style="font-size:28px">📅</div>
-        <h4>Mark Attendance</h4>
-      </div>
-
-      <div class="nav-card" onclick="location.href='/view'">
-        <div style="font-size:28px">📊</div>
-        <h4>View Attendance</h4>
-      </div>
-
-      <div class="nav-card" onclick="location.href='/all-records'">
-        <div style="font-size:28px">📋</div>
-        <h4>Search Records</h4>
-      </div>
-
-      <div class="nav-card" onclick="location.href='/user'">
-        <div style="font-size:28px">👥</div>
-        <h4>Add User</h4>
-      </div>
-    </div>
+  <div class="card p-3 text-center" style="width: 200px;">
+    <h4>Present</h4>
+    <p id="countPresent">0</p>
   </div>
+  <div class="card p-3 text-center" style="width: 200px;">
+    <h4>Absent</h4>
+    <p id="countAbsent">0</p>
+  </div>
+  <div class="card p-3 text-center" style="width: 200px;">
+    <h4>Half-Day</h4>
+    <p id="countHalf">0</p>
+  </div>
+  <div class="card p-3 text-center" style="width: 200px;">
+    <h4>PL/SL/Comp-Off</h4>
+    <p id="countOther">0</p>
+  </div>
+</div>
+{% endblock %}
 
-  <div id="toast"></div>
-
+{% block scripts %}
 <script>
-function showToast(msg, timeout=1700){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = '#28a745';
-  t.style.visibility = 'visible';
-  setTimeout(()=> t.style.visibility = 'hidden', timeout);
-}
-
-async function loadSummary(){
-  try{
-    const res = await fetch('/events');
-    const events = await res.json();
-    let total = events.length, present=0, absent=0, half=0, other=0;
-    events.forEach(ev=>{
-      const s = (ev.title && ev.title.includes(' - ')) ? ev.title.split(' - ').pop().trim() : '';
-      if(s==='Present') present++;
-      else if(s==='Absent') absent++;
-      else if(s==='Half Day' || s==='Half-Day') half++;
-      else if(s) other++;
-    });
-    document.getElementById('sumTotal').innerText = total;
-    document.getElementById('sumPresent').innerText = present;
-    document.getElementById('sumAbsent').innerText = absent;
-    document.getElementById('sumHalf').innerText = half;
-    document.getElementById('sumOther').innerText = other;
-  }catch(e){
-    console.error('Summary load error', e);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', loadSummary);
+  // Load attendance summary from /all-records API
+  fetch("/all-records")
+    .then(res => res.text())  // This will render template, you can create API to return JSON
+    .then(html => console.log("Dashboard loaded"))
+    .catch(err => console.log("Error loading dashboard:", err));
 </script>
-</body>
-</html>
+{% endblock %}
