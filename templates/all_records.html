@@ -1,66 +1,22 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Global Records</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="navbar bg-primary text-white d-flex justify-content-between">
+    <button class="btn btn-light" onclick="window.location.href='/'">🏠 Home</button>
+    <span class="fw-bold">📋 Global Attendance Records</span>
+    <button class="btn btn-light" onclick="window.location.href='/user'">➕ Add User</button>
+  </nav>
 
-{% block title %}Global Attendance Records{% endblock %}
-{% block header %}📋 Global Attendance{% endblock %}
-
-{% block content %}
-<div class="container mt-3">
-
-  <!-- Summary Cards -->
-  <div class="d-flex flex-wrap gap-3 mb-3">
-    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
-      <h6>Total</h6>
-      <p id="totalCount">0</p>
-    </div>
-    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
-      <h6>Present</h6>
-      <p id="countPresent">0</p>
-    </div>
-    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
-      <h6>Absent</h6>
-      <p id="countAbsent">0</p>
-    </div>
-    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
-      <h6>Half-Day</h6>
-      <p id="countHalf">0</p>
-    </div>
-    <div class="card p-3 text-center flex-fill" style="min-width:120px;">
-      <h6>PL/SL/Comp-Off</h6>
-      <p id="countOther">0</p>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-    <input type="search" id="searchInput" class="form-control" placeholder="Search name, note, status, date" style="min-width:150px;">
-    
-    <select id="statusFilter" class="form-control" style="min-width:120px;">
-      <option value="ALL">All Status</option>
-      <option value="Present">Present</option>
-      <option value="Absent">Absent</option>
-      <option value="Half Day">Half Day</option>
-      <option value="PL">PL</option>
-      <option value="SL">SL</option>
-      <option value="Comp-Off">Comp-Off</option>
-      <option value="Week Off">Week Off</option>
-    </select>
-
-    <select id="nameFilter" class="form-control" style="min-width:120px;">
-      <option value="ALL">All Employees</option>
-    </select>
-
-    <label>From</label>
-    <input type="date" id="fromDate" class="form-control" style="min-width:120px;">
-    <label>To</label>
-    <input type="date" id="toDate" class="form-control" style="min-width:120px;">
-
-    <button class="btn btn-secondary" id="clearFilters">Clear</button>
-  </div>
-
-  <!-- Records Table -->
-  <div class="table-responsive">
-    <table class="table table-striped" id="recordsTable">
-      <thead class="table-light">
+  <div class="container mt-3">
+    <table class="table table-striped table-responsive">
+      <thead class="table-primary">
         <tr>
           <th>Date</th>
           <th>Name</th>
@@ -69,102 +25,28 @@
           <th>Comp-Off</th>
         </tr>
       </thead>
-      <tbody id="tableBody"></tbody>
+      <tbody id="recordsBody">
+        <!-- Rows inserted by JS -->
+      </tbody>
     </table>
   </div>
 
-</div>
-{% endblock %}
-
-{% block scripts %}
 <script>
-let allRecords = [];
-
-// Load attendance data
-function loadData() {
-  fetch("/all-records-json")  // create API endpoint to return JSON
-    .then(res => res.json())
-    .then(data => {
-      allRecords = data.records;
-      renderTable(allRecords);
-      renderSummary(allRecords);
-      populateNameFilter(allRecords);
+function loadRecords() {
+  fetch("/all-records-json")
+    .then(res=>res.json())
+    .then(data=>{
+      let tbody = document.getElementById("recordsBody");
+      tbody.innerHTML = "";
+      data.records.forEach(r=>{
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td>${r.date}</td><td>${r.name}</td><td>${r.status}</td><td>${r.note}</td><td>${r.comp_off}</td>`;
+        tbody.appendChild(tr);
+      });
     })
-    .catch(err => {
-      const tbody = document.getElementById("tableBody");
-      tbody.innerHTML = "<tr><td colspan='5'>Error loading data.</td></tr>";
-      console.error("Error loading events:", err);
-    });
+    .catch(err=>alert("Error loading data"))
 }
-
-// Render summary cards
-function renderSummary(records) {
-  document.getElementById("totalCount").textContent = records.length;
-  document.getElementById("countPresent").textContent = records.filter(r=>r.status=="Present").length;
-  document.getElementById("countAbsent").textContent = records.filter(r=>r.status=="Absent").length;
-  document.getElementById("countHalf").textContent = records.filter(r=>r.status=="Half Day").length;
-  document.getElementById("countOther").textContent = records.filter(r=>["PL","SL","Comp-Off"].includes(r.status)).length;
-}
-
-// Populate name filter
-function populateNameFilter(records) {
-  const nameFilter = document.getElementById("nameFilter");
-  const names = [...new Set(records.map(r=>r.name))];
-  nameFilter.innerHTML = "<option value='ALL'>All Employees</option>";
-  names.forEach(n=>nameFilter.innerHTML += `<option value="${n}">${n}</option>`);
-}
-
-// Render table rows
-function renderTable(records) {
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = "";
-  records.forEach(r=>{
-    tbody.innerHTML += `<tr>
-      <td>${r.date}</td>
-      <td>${r.name}</td>
-      <td>${r.status}</td>
-      <td>${r.note}</td>
-      <td>${r.comp_off}</td>
-    </tr>`;
-  });
-}
-
-// Filters
-document.getElementById("searchInput").addEventListener("input", applyFilters);
-document.getElementById("statusFilter").addEventListener("change", applyFilters);
-document.getElementById("nameFilter").addEventListener("change", applyFilters);
-document.getElementById("fromDate").addEventListener("change", applyFilters);
-document.getElementById("toDate").addEventListener("change", applyFilters);
-document.getElementById("clearFilters").addEventListener("click", ()=>{
-  document.getElementById("searchInput").value="";
-  document.getElementById("statusFilter").value="ALL";
-  document.getElementById("nameFilter").value="ALL";
-  document.getElementById("fromDate").value="";
-  document.getElementById("toDate").value="";
-  applyFilters();
-});
-
-function applyFilters() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const status = document.getElementById("statusFilter").value;
-  const name = document.getElementById("nameFilter").value;
-  const from = document.getElementById("fromDate").value;
-  const to = document.getElementById("toDate").value;
-
-  let filtered = allRecords.filter(r=>{
-    let matchSearch = r.name.toLowerCase().includes(search) || r.note.toLowerCase().includes(search) || r.status.toLowerCase().includes(search) || r.date.includes(search);
-    let matchStatus = (status=="ALL") ? true : r.status==status;
-    let matchName = (name=="ALL") ? true : r.name==name;
-    let matchFrom = from ? r.date >= from : true;
-    let matchTo = to ? r.date <= to : true;
-    return matchSearch && matchStatus && matchName && matchFrom && matchTo;
-  });
-
-  renderTable(filtered);
-  renderSummary(filtered);
-}
-
-// Initial load
-document.addEventListener("DOMContentLoaded", loadData);
+document.addEventListener("DOMContentLoaded", loadRecords);
 </script>
-{% endblock %}
+</body>
+</html>
