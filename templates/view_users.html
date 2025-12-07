@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Users List{% endblock %}
+{% block header %}👤 All Users{% endblock %}
+
+{% block content %}
+<div class="table-wrap mt-3">
+  <table class="table table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Salary</th>
+        <th>Company</th>
+      </tr>
+    </thead>
+    <tbody id="userTableBody">
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch("/users-list")
+  .then(res => res.json())
+  .then(data => {
+    const tbody = document.getElementById("userTableBody");
+    data.forEach(u => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${u.name}</td><td>${u.email}</td><td>${u.salary}</td><td>${u.company}</td>`;
+      tbody.appendChild(row);
+    });
+  });
+</script>
+{% endblock %}
