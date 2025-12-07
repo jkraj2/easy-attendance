@@ -1,156 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Attendance Calendar</title>
+{% extends "base.html" %}
 
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+{% block title %}Attendance Calendar{% endblock %}
+{% block header %}📅 Attendance Calendar{% endblock %}
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <style>
-    body{font-family:Inter, sans-serif;margin:0;background:#f4f6f9}
-    .topbar{width:100%;background:#0d6efd;padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:99}
-    .container{max-width:1100px;margin:12px auto;padding:12px}
-    .title{margin:10px auto;text-align:center;font-size:20px}
-    #calendar{max-width:980px;margin:0 auto;background:#fff;padding:10px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
-    .popup{position:fixed;left:50%;top:18%;transform:translateX(-50%);width:92%;max-width:420px;background:#fff;padding:14px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,0.2);display:none;z-index:9999}
-    .popup label{display:block;margin-top:8px;font-weight:600}
-    .popup select, .popup input, .popup textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px}
-    .popup button{margin-top:12px;padding:10px;border-radius:8px;border:none;background:#0d6efd;color:#fff;width:100%}
-    .popup .cancel{background:#e11d48;margin-top:8px}
-    #toast{visibility:hidden;min-width:220px;background:#28a745;color:#fff;text-align:center;border-radius:8px;padding:12px;position:fixed;z-index:99999;left:50%;bottom:30px;transform:translateX(-50%);box-shadow:0 3px 10px rgba(0,0,0,0.2);font-size:15px}
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <div onclick="location.href='/'">🏠 <span style="margin-left:8px">Home</span></div>
-    <div onclick="location.href='/user'">➕ <span style="margin-left:8px">Add User</span></div>
-  </div>
+{% block content %}
+<div id="calendar"></div>
 
-  <div class="container">
-    <h2 class="title">📅 Attendance Calendar</h2>
-    <div id="calendar"></div>
-  </div>
+<!-- Attendance Form Popup -->
+<div id="form-popup" class="popup" style="display:none; padding:10px; background:white; border:1px solid #ccc; max-width:300px;">
+  <h5>Mark Attendance</h5>
+  <select id="userName" class="form-control">
+    <option value="">Select User</option>
+  </select>
 
-  <div id="form-popup" class="popup" role="dialog" aria-modal="true">
-    <h3 style="margin:0 0 6px">Mark Attendance</h3>
+  <label>Status:</label>
+  <select id="status" class="form-control">
+    <option value="Present">Present</option>
+    <option value="Absent">Absent</option>
+    <option value="Half Day">Half Day</option>
+    <option value="PL">PL</option>
+    <option value="SL">SL</option>
+    <option value="Comp-Off">Comp-Off</option>
+  </select>
 
-    <label for="userName">Name</label>
-    <select id="userName"><option value="">Loading users...</option></select>
+  <label>Note:</label>
+  <textarea id="note" class="form-control"></textarea>
 
-    <label for="status">Status</label>
-    <select id="status">
-      <option value="Present">Present</option>
-      <option value="Absent">Absent</option>
-      <option value="Half Day">Half Day</option>
-      <option value="PL">PL</option>
-      <option value="SL">SL</option>
-      <option value="Comp-Off">Comp-Off</option>
-    </select>
+  <label>Comp-Off Comment:</label>
+  <input type="text" id="comp_off" class="form-control">
 
-    <label for="note">Note</label>
-    <textarea id="note" rows="3" placeholder="Remarks..."></textarea>
+  <button class="btn btn-success mt-2" onclick="submitAttendance()">Submit</button>
+  <button class="btn btn-secondary mt-2" onclick="closeForm()">Cancel</button>
+</div>
+{% endblock %}
 
-    <label for="comp_off">Comp-Off Comment</label>
-    <input id="comp_off" type="text" placeholder="reason">
-
-    <button id="saveBtn">Save Attendance</button>
-    <button class="cancel" onclick="closeForm()">Cancel</button>
-  </div>
-
-  <div id="toast"></div>
-
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script>
-let selectedDate = '';
-
-async function loadUsersIntoDropdown(){
-  try{
-    const res = await fetch('/users-list');
-    const users = await res.json();
-    const sel = document.getElementById('userName');
-    sel.innerHTML = '<option value="">Select User</option>';
-    users.forEach(u=>{
-      const opt = document.createElement('option');
-      opt.value = u.name || u.email || '';
-      opt.textContent = u.name || u.email || '';
-      sel.appendChild(opt);
+function loadUsers() {
+  fetch("/users-list")
+    .then(res => res.json())
+    .then(users => {
+      const dropdown = document.getElementById("userName");
+      dropdown.innerHTML = '<option value="">Select User</option>';
+      users.forEach(u => {
+        dropdown.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+      });
     });
-  }catch(e){
-    console.error('users load', e);
-    document.getElementById('userName').innerHTML = '<option value="">No users</option>';
-  }
 }
 
-function showToast(msg, timeout=1700){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = msg.toLowerCase().includes('error') ? '#dc3545' : '#28a745';
-  t.style.visibility = 'visible';
-  setTimeout(()=> t.style.visibility = 'hidden', timeout);
-  if(window.AppInventor && typeof window.AppInventor.setWebViewString === 'function'){
-    try{ window.AppInventor.setWebViewString(msg); }catch(e){}
-  }
-}
+document.addEventListener("DOMContentLoaded", loadUsers);
 
-document.addEventListener('DOMContentLoaded', async function(){
-  await loadUsersIntoDropdown();
-  const calendarEl = document.getElementById('calendar');
-  const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    height: 'auto',
-    selectable: true,
-    dateClick: function(info){
-      selectedDate = info.dateStr;
-      openForm();
-    },
-    events: '/events'
+function submitAttendance() {
+  const record = {
+    name: document.getElementById("userName").value,
+    status: document.getElementById("status").value,
+    note: document.getElementById("note").value,
+    comp_off: document.getElementById("comp_off").value,
+    date: new Date().toISOString().split('T')[0]
+  };
+
+  fetch("/mark", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record)
+  })
+  .then(res => res.json())
+  .then(d => {
+    alert(d.message);
+    location.reload();
   });
-  calendar.render();
-});
-
-function openForm(){
-  document.getElementById('form-popup').style.display = 'block';
-  loadUsersIntoDropdown();
 }
 
-function closeForm(){
-  document.getElementById('form-popup').style.display = 'none';
-  // clear fields
-  document.getElementById('userName').value = '';
-  document.getElementById('status').value = 'Present';
-  document.getElementById('note').value = '';
-  document.getElementById('comp_off').value = '';
+function closeForm() {
+  document.getElementById("form-popup").style.display = "none";
 }
-
-document.getElementById('saveBtn').addEventListener('click', async function(){
-  const name = document.getElementById('userName').value;
-  const status = document.getElementById('status').value;
-  const note = document.getElementById('note').value;
-  const comp_off = document.getElementById('comp_off').value;
-
-  if(!name){ showToast('Please select user'); return; }
-  if(!selectedDate){ showToast('Please select a date'); return; }
-
-  const payload = { name, status, note, comp_off, date: selectedDate };
-
-  try{
-    const res = await fetch('/mark', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const j = await res.json();
-    showToast(j.message || 'Saved');
-    closeForm();
-    // reload to show updated events
-    setTimeout(()=>location.reload(), 600);
-  }catch(e){
-    console.error(e);
-    showToast('Error saving attendance');
-  }
-});
 </script>
-</body>
-</html>
+{% endblock %}
