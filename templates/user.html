@@ -74,7 +74,12 @@ function saveUser() {
   })
   .then(res => res.json())
   .then(d => {
-    alert(d.message);
+     // Replace alert()
+     if (window.AppInventor) {
+         window.AppInventor.setWebViewString(d.message);
+     } else {
+         alert(d.message); // for normal browser testing
+     }
   });
 }
 
