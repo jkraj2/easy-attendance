@@ -114,6 +114,11 @@ def all_users_json():
     users = load_users()
     return jsonify({"users": users})
 
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy-policy.html")
+
+
 # ----------------- RUN SERVER -----------------
 if __name__ == "__main__":
     import os
