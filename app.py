@@ -49,11 +49,9 @@ def view():
     records = load_data()
     return render_template("view.html", records=records)
 
-@app.route("/all-records-json")
-def all_records_json():
-    data = load_data()
-    return jsonify({"records": data})
-
+@app.route("/all-records")
+def all_records_page():
+    return render_template("all_records.html")
 
 @app.route("/user")
 def user_page():
@@ -61,13 +59,12 @@ def user_page():
 
 @app.route("/view-users")
 def view_users():
-    if os.path.exists(USER_FILE):
-        with open(USER_FILE, "r") as f:
-            users = json.load(f)
-    else:
-        users = []
+    users = load_users()
     return render_template("view_users.html", users=users)
 
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template("privacy-policy.html")
 
 # ----------------- API ENDPOINTS -----------------
 @app.route("/save-user", methods=["POST"])
@@ -116,13 +113,7 @@ def all_users_json():
     users = load_users()
     return jsonify({"users": users})
 
-@app.route("/privacy-policy")
-def privacy_policy():
-    return render_template("privacy-policy.html")
-
-
 # ----------------- RUN SERVER -----------------
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
