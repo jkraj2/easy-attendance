@@ -49,9 +49,9 @@ def view():
     records = load_data()
     return render_template("view.html", records=records)
 
-@app.route("/all-records")
-def all_records():
-    return render_template("all_records.html")
+@app.route("/all-records-json")
+def all_records_json():
+    return jsonify(load_data())
 
 @app.route("/user")
 def user_page():
