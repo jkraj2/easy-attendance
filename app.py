@@ -51,7 +51,9 @@ def view():
 
 @app.route("/all-records-json")
 def all_records_json():
-    return jsonify(load_data())
+    data = load_data()
+    return jsonify({"records": data})
+
 
 @app.route("/user")
 def user_page():
