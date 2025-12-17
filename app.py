@@ -66,6 +66,15 @@ def view_users():
 def privacy_policy():
     return render_template("privacy-policy.html")
 
+@app.route("/app-ads.txt")
+def app_ads():
+    return send_from_directory(
+        directory=os.getcwd(),
+        path="app-ads.txt",
+        mimetype="text/plain"
+    )
+
+
 # ----------------- API ENDPOINTS -----------------
 @app.route("/save-user", methods=["POST"])
 def save_user():
