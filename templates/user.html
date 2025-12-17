@@ -9,6 +9,9 @@
 <label>Company</label><input id="company" class="form-control">
 <button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
 </div>
+<div id="successMsg" class="alert alert-success mt-3 d-none"></div>
+<div id="errorMsg" class="alert alert-danger mt-3 d-none"></div>
+
 <script>
 function saveUser(){
     const data={
