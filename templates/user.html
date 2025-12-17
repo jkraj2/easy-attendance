@@ -1,27 +1,82 @@
 {% extends "base.html" %}
 {% block title %}Add User{% endblock %}
 {% block content %}
+
 <center><h2>Add New User</h2></center>
+
 <div class="card p-4 mb-4">
-<label>Name</label><input id="name" class="form-control">
-<label>Email</label><input id="email" class="form-control">
-<label>Salary</label><input id="salary" type="number" class="form-control">
-<label>Company</label><input id="company" class="form-control">
-<button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
+  <label>Name</label>
+  <input id="name" class="form-control">
+
+  <label>Email</label>
+  <input id="email" class="form-control">
+
+  <label>Salary</label>
+  <input id="salary" type="number" class="form-control">
+
+  <label>Company</label>
+  <input id="company" class="form-control">
+
+  <button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
 </div>
-<div id="successMsg" class="alert alert-success mt-3 d-none"></div>
-<div id="errorMsg" class="alert alert-danger mt-3 d-none"></div>
+
+<!-- SUCCESS POPUP -->
+<div id="successMsg" class="alert alert-success text-center d-none"
+     style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+     z-index:9999;min-width:250px;">
+</div>
+
+<!-- ERROR POPUP -->
+<div id="errorMsg" class="alert alert-danger text-center d-none"
+     style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+     z-index:9999;min-width:250px;">
+</div>
 
 <script>
 function saveUser(){
-    const data={
+    const data = {
         name: document.getElementById("name").value,
         email: document.getElementById("email").value,
         salary: document.getElementById("salary").value,
         company: document.getElementById("company").value
     };
-    fetch("/save-user",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
-    .then(res=>res.json()).then(d=>alert(d.message));
+
+    fetch("/save-user", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(d => {
+        // SHOW SUCCESS POPUP
+        const success = document.getElementById("successMsg");
+        success.innerText = d.message || "User saved successfully!";
+        success.classList.remove("d-none");
+
+        // HIDE ERROR IF VISIBLE
+        document.getElementById("errorMsg").classList.add("d-none");
+
+        // RESET FORM
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("salary").value = "";
+        document.getElementById("company").value = "";
+
+        // AUTO HIDE AFTER 3 SECONDS (MIT FRIENDLY)
+        setTimeout(() => {
+            success.classList.add("d-none");
+        }, 3000);
+    })
+    .catch(() => {
+        const error = document.getElementById("errorMsg");
+        error.innerText = "Error saving user!";
+        error.classList.remove("d-none");
+
+        setTimeout(() => {
+            error.classList.add("d-none");
+        }, 3000);
+    });
 }
 </script>
+
 {% endblock %}
