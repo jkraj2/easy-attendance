@@ -2,57 +2,54 @@
 {% block title %}Add User{% endblock %}
 {% block content %}
 
-<div class="container mt-3">
-  <h4 class="text-center">➕ Add User</h4>
+<h3 class="text-center mb-3">➕ Add User</h3>
 
-  <div class="card p-3">
-    <label>Name</label>
-    <input id="name" class="form-control">
+<div class="card p-4">
+  <label>Name</label>
+  <input id="name" class="form-control">
 
-    <label class="mt-2">Email</label>
-    <input id="email" class="form-control">
+  <label class="mt-2">Email</label>
+  <input id="email" class="form-control">
 
-    <label class="mt-2">Salary</label>
-    <input id="salary" type="number" class="form-control">
+  <label class="mt-2">Salary</label>
+  <input id="salary" type="number" class="form-control">
 
-    <label class="mt-2">Company</label>
-    <input id="company" class="form-control">
+  <label class="mt-2">Company</label>
+  <input id="company" class="form-control">
 
-    <button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
-  </div>
+  <button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
 </div>
 
-<!-- TOAST -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-  <div id="successToast" class="toast align-items-center text-bg-success">
-    <div class="d-flex">
-      <div class="toast-body">User saved successfully</div>
-      <button class="btn-close btn-close-white me-2" data-bs-dismiss="toast"></button>
-    </div>
+<!-- Success Popup -->
+<div id="toast" class="toast align-items-center text-bg-success position-fixed bottom-0 end-0 m-3 d-none">
+  <div class="d-flex">
+    <div class="toast-body">User saved successfully</div>
   </div>
 </div>
 
 <script>
-function saveUser() {
+function saveUser(){
   const user = {
     name: name.value.trim(),
-    email: email.value,
+    email: email.value.trim(),
     salary: salary.value,
     company: company.value
   };
 
-  if (!user.name) {
+  if(!user.name){
     alert("Name required");
     return;
   }
 
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  let users = JSON.parse(localStorage.getItem("users")) || [];
   users.push(user);
   localStorage.setItem("users", JSON.stringify(users));
 
-  document.querySelector("form")?.reset();
+  document.querySelector("form")?.reset?.();
 
-  new bootstrap.Toast(document.getElementById("successToast")).show();
+  const toast = document.getElementById("toast");
+  toast.classList.remove("d-none");
+  setTimeout(()=>toast.classList.add("d-none"), 2500);
 }
 </script>
 
