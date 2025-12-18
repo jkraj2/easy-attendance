@@ -1,55 +1,70 @@
 {% extends "base.html" %}
 {% block title %}Add User{% endblock %}
-{% block content %}
 
+{% block content %}
 <h3 class="text-center mb-3">➕ Add User</h3>
 
 <div class="card p-4">
+
   <label>Name</label>
-  <input id="name" class="form-control">
+  <input id="name" class="form-control mb-2">
 
-  <label class="mt-2">Email</label>
-  <input id="email" class="form-control">
+  <label>Email</label>
+  <input id="email" class="form-control mb-2">
 
-  <label class="mt-2">Salary</label>
-  <input id="salary" type="number" class="form-control">
+  <label>Salary</label>
+  <input id="salary" type="number" class="form-control mb-2">
 
-  <label class="mt-2">Company</label>
-  <input id="company" class="form-control">
+  <label>Company</label>
+  <input id="company" class="form-control mb-3">
 
-  <button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
-</div>
+  <button class="btn btn-primary w-100" onclick="saveUser()">Save User</button>
+  <button class="btn btn-outline-secondary w-100 mt-2" onclick="testRead()">READ TEST</button>
 
-<!-- Success Popup -->
-<div id="toast" class="toast align-items-center text-bg-success position-fixed bottom-0 end-0 m-3 d-none">
-  <div class="d-flex">
-    <div class="toast-body">User saved successfully</div>
-  </div>
 </div>
 
 <script>
 function saveUser(){
-  const user = {
-    name: name.value.trim(),
-    email: email.value.trim(),
-    salary: salary.value,
-    company: company.value
-  };
+  const name = document.getElementById("name").value.trim();
 
-  if(!user.name){
-    alert("Name required");
+  if(name === ""){
+    alert("Name is required");
     return;
   }
 
-  let users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = {
+    name: name,
+    email: document.getElementById("email").value,
+    salary: document.getElementById("salary").value,
+    company: document.getElementById("company").value
+  };
+
+  let users = [];
+  try {
+    users = JSON.parse(localStorage.getItem("users")) || [];
+  } catch(e){
+    users = [];
+  }
+
   users.push(user);
   localStorage.setItem("users", JSON.stringify(users));
 
-  document.querySelector("form")?.reset?.();
+  alert("Saved");   // ✅ THIS WILL WORK IN MIT / NIOTRON
 
-  const toast = document.getElementById("toast");
-  toast.classList.remove("d-none");
-  setTimeout(()=>toast.classList.add("d-none"), 2500);
+  // Clear inputs
+  document.getElementById("name").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("salary").value = "";
+  document.getElementById("company").value = "";
+}
+
+function testRead(){
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  if(users.length > 0){
+    alert("WORKING");
+  } else {
+    alert("NO DATA");
+  }
 }
 </script>
 
