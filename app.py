@@ -73,6 +73,9 @@ def app_ads():
         path="app-ads.txt",
         mimetype="text/plain"
     )
+@app.route("/test")
+def test():
+    return render_template("test.html")
 
 
 # ----------------- API ENDPOINTS -----------------
