@@ -1,89 +1,65 @@
 {% extends "base.html" %}
-{% block title %}Global Attendance Records{% endblock %}
+
+{% block title %}All Records - Attendance App{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid">
-  <div class="row">
-
-    <!-- Sidebar -->
-    <!--<aside class="col-md-2 bg-primary text-white vh-100 p-3">
-      <ul class="nav flex-column gap-2">
-        <li class="nav-item"><a href="/" class="nav-link text-white">🏠 Home</a></li>
-        <li class="nav-item"><a href="/calendar" class="nav-link text-white">📅 Calendar</a></li>
-        <li class="nav-item"><a href="/all-records" class="nav-link text-white fw-bold">📋 Global Records</a></li>
-        <li class="nav-item"><a href="/user" class="nav-link text-white">➕ Add User</a></li>
-        <li class="nav-item"><a href="/view" class="nav-link text-white">👁 View Attendance</a></li>
-      </ul>
-    </aside>-->
-
-    <!-- Main Content -->
-    <main class="col-md-10 p-4">
-
-      <h3 class="text-center mb-4">📋 Global Attendance Records</h3>
-
-      <!-- Filters -->
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        <input type="search" id="searchInput" class="form-control w-auto" placeholder="Search">
-        <select id="statusFilter" class="form-select w-auto">
-          <option value="ALL">All Status</option>
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
-          <option value="Half-Day">Half-Day</option>
-          <option value="PL">PL</option>
-          <option value="SL">SL</option>
-          <option value="Comp-Off">Comp-Off</option>
-          <option value="Week-Off">Week-Off</option>
-        </select>
-
-        <select id="nameFilter" class="form-select w-auto">
-          <option value="ALL">All Employees</option>
-        </select>
-
-        <input type="date" id="fromDate" class="form-control w-auto">
-        <input type="date" id="toDate" class="form-control w-auto">
-
-        <button id="clearFilters" class="btn btn-secondary btn-sm">Clear</button>
-
-        <div class="ms-auto">
-          <button id="exportCsv" class="btn btn-primary btn-sm">CSV</button>
-          <button id="exportExcel" class="btn btn-success btn-sm">Excel</button>
-          <button id="exportPdf" class="btn btn-danger btn-sm">PDF</button>
-        </div>
-      </div>
-
-      <!-- Summary -->
-      <div class="d-flex gap-3 mb-3">
-        <span class="badge bg-dark">Total: <span id="totalCount">0</span></span>
-        <span class="badge bg-success">Present: <span id="countPresent">0</span></span>
-        <span class="badge bg-danger">Absent: <span id="countAbsent">0</span></span>
-        <span class="badge bg-warning text-dark">Half-Day: <span id="countHalf">0</span></span>
-        <span class="badge bg-info">Other: <span id="countOther">0</span></span>
-      </div>
-
-      <!-- Table -->
-      <div class="table-responsive">
-        <table class="table table-bordered table-striped" id="recordsTable">
-          <thead class="table-light">
-            <tr>
-              <th>Date</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Shift</th>
-              <th>More</th>
-              <th>Leave</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-
-    </main>
-  </div>
+<div class="page-header">
+    <h1>All Attendance Records</h1>
+    <p>Complete history of all attendance entries</p>
 </div>
 
-<!-- JS -->
-<script src="{{ url_for('static', filename='all_records.js') }}"></script>
+<div class="card">
+    <div class="table-controls">
+        <input type="text" id="searchInput" placeholder="Search by name..." class="search-input">
+        <select id="filterStatus" class="filter-select">
+            <option value="">All Status</option>
+            <option value="present">Present</option>
+            <option value="absent">Absent</option>
+            <option value="late">Late</option>
+        </select>
+    </div>
 
+    <div class="table-responsive">
+        <table id="recordsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if records %}
+                    {% for record in records|reverse %}
+                    <tr data-status="{{ record.status }}">
+                        <td>{{ record.name }}</td>
+                        <td>
+                            <span class="status-badge status-{{ record.status }}">
+                                {{ record.status|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.time }}</td>
+                        <td>
+                            <button class="btn btn-small btn-danger" onclick="deleteRecord('{{ record.timestamp }}')">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No records found</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='all_records.js') }}"></script>
 {% endblock %}
