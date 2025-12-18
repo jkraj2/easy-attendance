@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Calendar{% endblock %}
+{% block title %}Attendance Calendar{% endblock %}
 {% block content %}
 
-<h4 class="text-center">📅 Attendance Calendar</h4>
+<h3 class="text-center mb-2">📅 Attendance Calendar</h3>
 <div id="calendar"></div>
 
 <!-- Modal -->
-<div class="modal fade" id="attendanceModal">
-  <div class="modal-dialog">
+<div class="modal fade" id="attModal">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content p-3">
       <h5>Mark Attendance</h5>
 
@@ -18,7 +18,6 @@
         <option>Half Day</option>
         <option>Overtime</option>
       </select>
-
       <select id="shift" class="form-select mb-2">
         <option>Regular</option>
         <option>Morning</option>
@@ -33,21 +32,28 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-let selectedDate = "";
+let selectedDate;
 let calendar;
 
-function loadUsers() {
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-  user.innerHTML = "<option value=''>Select User</option>";
-  users.forEach(u => user.innerHTML += `<option>${u.name}</option>`);
+function loadUsers(){
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  user.innerHTML = '<option value="">Select User</option>';
+  users.forEach(u=>{
+    user.innerHTML += `<option>${u.name}</option>`;
+  });
 }
 
-function saveAttendance() {
-  if (!user.value) return alert("Select user");
+function saveAttendance(){
+  if(!user.value){ alert("Select user"); return; }
 
-  let data = JSON.parse(localStorage.getItem("attendance") || "[]");
+  let data = JSON.parse(localStorage.getItem("attendance")) || [];
   data.push({
     date: selectedDate,
     name: user.value,
@@ -55,28 +61,29 @@ function saveAttendance() {
     shift: shift.value,
     note: note.value
   });
-  localStorage.setItem("attendance", JSON.stringify(data));
 
+  localStorage.setItem("attendance", JSON.stringify(data));
   calendar.refetchEvents();
-  bootstrap.Modal.getInstance(attendanceModal).hide();
+  bootstrap.Modal.getInstance(attModal).hide();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", ()=>{
   loadUsers();
 
-  calendar = new FullCalendar.Calendar(calendar, {
-    initialView: "dayGridMonth",
-    dateClick(info) {
+  calendar = new FullCalendar.Calendar(document.getElementById("calendar"),{
+    initialView:"dayGridMonth",
+    selectable:true,
+    dateClick(info){
       selectedDate = info.dateStr;
       loadUsers();
-      new bootstrap.Modal(attendanceModal).show();
+      new bootstrap.Modal(attModal).show();
     },
-    events(fetchInfo, success) {
-      let data = JSON.parse(localStorage.getItem("attendance") || "[]");
-      success(data.map(d => ({
-        title: d.name + " - " + d.status,
-        start: d.date
-      })));
+    events(){
+      let data = JSON.parse(localStorage.getItem("attendance")) || [];
+      return data.map(r=>({
+        title: `${r.name} (${r.status})`,
+        start: r.date
+      }));
     }
   });
 
