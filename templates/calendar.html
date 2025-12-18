@@ -1,33 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Attendance Calendar{% endblock %}
+{% block title %}Calendar{% endblock %}
 {% block content %}
 
-<h3 class="text-center mb-2">📅 Attendance Calendar</h3>
+<h3 class="text-center">Attendance Calendar</h3>
 <div id="calendar"></div>
 
-<!-- Modal -->
-<div class="modal fade" id="attModal">
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Popup -->
+<div class="modal fade" id="attendancePopup">
+  <div class="modal-dialog">
     <div class="modal-content p-3">
-      <h5>Mark Attendance</h5>
 
-      <select id="user" class="form-select mb-2"></select>
-      <select id="status" class="form-select mb-2">
+      <select id="popupUser" class="form-select mb-2"></select>
+      <select id="popupStatus" class="form-select mb-2">
         <option>Present</option>
         <option>Absent</option>
-        <option>Half Day</option>
-        <option>Overtime</option>
-      </select>
-      <select id="shift" class="form-select mb-2">
-        <option>Regular</option>
-        <option>Morning</option>
-        <option>Evening</option>
-        <option>Night</option>
+        <option>Half-Day</option>
       </select>
 
-      <textarea id="note" class="form-control mb-2" placeholder="Notes"></textarea>
+      <textarea id="popupNotes" class="form-control mb-2" placeholder="Notes"></textarea>
 
-      <button class="btn btn-primary w-100" onclick="saveAttendance()">Save</button>
+      <button class="btn btn-success w-100" onclick="saveAttendance()">Save</button>
     </div>
   </div>
 </div>
@@ -42,48 +34,55 @@
 let selectedDate;
 let calendar;
 
+// Load users
 function loadUsers(){
-  let users = JSON.parse(localStorage.getItem("users")) || [];
-  user.innerHTML = '<option value="">Select User</option>';
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  popupUser.innerHTML = '<option value="">Select User</option>';
   users.forEach(u=>{
-    user.innerHTML += `<option>${u.name}</option>`;
+    popupUser.innerHTML += `<option>${u.name}</option>`;
   });
 }
 
 function saveAttendance(){
-  if(!user.value){ alert("Select user"); return; }
+  if(!popupUser.value){
+    alert("Select user");
+    return;
+  }
+
+  const record = {
+    date: selectedDate,
+    name: popupUser.value,
+    status: popupStatus.value,
+    note: popupNotes.value
+  };
 
   let data = JSON.parse(localStorage.getItem("attendance")) || [];
-  data.push({
-    date: selectedDate,
-    name: user.value,
-    status: status.value,
-    shift: shift.value,
-    note: note.value
-  });
-
+  data.push(record);
   localStorage.setItem("attendance", JSON.stringify(data));
+
+  alert("Saved");
+  bootstrap.Modal.getInstance(attendancePopup).hide();
   calendar.refetchEvents();
-  bootstrap.Modal.getInstance(attModal).hide();
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
   loadUsers();
 
-  calendar = new FullCalendar.Calendar(document.getElementById("calendar"),{
-    initialView:"dayGridMonth",
-    selectable:true,
-    dateClick(info){
-      selectedDate = info.dateStr;
-      loadUsers();
-      new bootstrap.Modal(attModal).show();
-    },
-    events(){
-      let data = JSON.parse(localStorage.getItem("attendance")) || [];
-      return data.map(r=>({
-        title: `${r.name} (${r.status})`,
+  calendar = new FullCalendar.Calendar(calendar, {
+    initialView: "dayGridMonth",
+
+    events: (info, success)=>{
+      const data = JSON.parse(localStorage.getItem("attendance")) || [];
+      success(data.map(r=>({
+        title: `${r.name} - ${r.status}`,
         start: r.date
-      }));
+      })));
+    },
+
+    dateClick: info=>{
+      selectedDate = info.dateStr;
+      popupNotes.value = "";
+      new bootstrap.Modal(attendancePopup).show();
     }
   });
 
