@@ -1,110 +1,83 @@
 {% extends "base.html" %}
-{% block title %}Attendance Calendar{% endblock %}
-
+{% block title %}Calendar{% endblock %}
 {% block content %}
-<h3 class="text-center">📅 Attendance Calendar</h3>
+
+<h4 class="text-center">📅 Attendance Calendar</h4>
 <div id="calendar"></div>
 
-<!-- Attendance Modal -->
-<div class="modal fade" id="attendancePopup">
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Modal -->
+<div class="modal fade" id="attendanceModal">
+  <div class="modal-dialog">
     <div class="modal-content p-3">
       <h5>Mark Attendance</h5>
 
-      <select id="popupUser" class="form-select mb-2"></select>
-
-      <select id="popupStatus" class="form-select mb-2">
+      <select id="user" class="form-select mb-2"></select>
+      <select id="status" class="form-select mb-2">
         <option>Present</option>
         <option>Absent</option>
         <option>Half Day</option>
         <option>Overtime</option>
       </select>
 
-      <select id="popupShift" class="form-select mb-2">
+      <select id="shift" class="form-select mb-2">
         <option>Regular</option>
         <option>Morning</option>
         <option>Evening</option>
         <option>Night</option>
       </select>
 
-      <select id="popupMore" class="form-select mb-2">
-        <option value="">None</option>
-        <option>Holiday</option>
-        <option>Weekly Off</option>
-      </select>
-
-      <select id="popupLeave" class="form-select mb-2">
-        <option value="">None</option>
-        <option>PL</option>
-        <option>CL</option>
-        <option>SL</option>
-        <option>Other</option>
-      </select>
-
-      <textarea id="popupNotes" class="form-control mb-2" placeholder="Notes"></textarea>
+      <textarea id="note" class="form-control mb-2" placeholder="Notes"></textarea>
 
       <button class="btn btn-primary w-100" onclick="saveAttendance()">Save</button>
     </div>
   </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script>
-let selectedDate;
+let selectedDate = "";
 let calendar;
 
-// Load users from localStorage
 function loadUsers() {
-  const users = JSON.parse(localStorage.getItem("users")) || [];
-  popupUser.innerHTML = `<option value="">Select User</option>`;
-  users.forEach(u => popupUser.innerHTML += `<option>${u.name}</option>`);
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  user.innerHTML = "<option value=''>Select User</option>";
+  users.forEach(u => user.innerHTML += `<option>${u.name}</option>`);
 }
 
-// Save attendance locally
 function saveAttendance() {
-  if (!popupUser.value) {
-    alert("Select user");
-    return;
-  }
+  if (!user.value) return alert("Select user");
 
-  let records = JSON.parse(localStorage.getItem("attendance")) || [];
-  records.push({
+  let data = JSON.parse(localStorage.getItem("attendance") || "[]");
+  data.push({
     date: selectedDate,
-    name: popupUser.value,
-    status: popupStatus.value,
-    shift: popupShift.value,
-    more: popupMore.value,
-    leave: popupLeave.value,
-    notes: popupNotes.value
+    name: user.value,
+    status: status.value,
+    shift: shift.value,
+    note: note.value
   });
+  localStorage.setItem("attendance", JSON.stringify(data));
 
-  localStorage.setItem("attendance", JSON.stringify(records));
-  alert("Attendance saved successfully!");
   calendar.refetchEvents();
-  bootstrap.Modal.getInstance(attendancePopup).hide();
+  bootstrap.Modal.getInstance(attendanceModal).hide();
 }
 
-// Load events into calendar
-function getEvents(info, successCallback) {
-  const records = JSON.parse(localStorage.getItem("attendance")) || [];
-  successCallback(records.map(r => ({
-    title: `${r.name} - ${r.status}`,
-    start: r.date
-  })));
-}
-
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   loadUsers();
 
-  calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+  calendar = new FullCalendar.Calendar(calendar, {
     initialView: "dayGridMonth",
     dateClick(info) {
       selectedDate = info.dateStr;
-      new bootstrap.Modal(attendancePopup).show();
+      loadUsers();
+      new bootstrap.Modal(attendanceModal).show();
     },
-    events: getEvents
+    events(fetchInfo, success) {
+      let data = JSON.parse(localStorage.getItem("attendance") || "[]");
+      success(data.map(d => ({
+        title: d.name + " - " + d.status,
+        start: d.date
+      })));
+    }
   });
 
   calendar.render();
