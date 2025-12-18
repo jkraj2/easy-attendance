@@ -1,52 +1,55 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('attendanceForm');
+    const messageDiv = document.getElementById('message');
 
-let selectedDate = null;
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-document.addEventListener("DOMContentLoaded", function () {
-    const calendarEl = document.getElementById('calendar');
+            const userName = document.getElementById('userName').value;
+            const status = document.getElementById('status').value;
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        selectable: true,
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,listMonth'
-        },
-        dateClick: function (info) {
-            selectedDate = info.dateStr;
-            document.getElementById("form-popup").style.display = "block";
-        },
-        events: "/events"
-    });
+            if (!userName) {
+                showMessage('Please select a name', 'error');
+                return;
+            }
 
-    calendar.render();
+            try {
+                const response = await fetch('/mark_attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: userName,
+                        status: status
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('Attendance marked successfully!', 'success');
+                    form.reset();
+                } else {
+                    showMessage('Error marking attendance', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error marking attendance', 'error');
+            }
+        });
+    }
+
+    function showMessage(text, type) {
+        if (messageDiv) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 3000);
+        }
+    }
 });
-
-function closeForm() {
-    document.getElementById("form-popup").style.display = "none";
-}
-
-function submitAttendance() {
-    const name = document.getElementById("name").value;
-    const status = document.getElementById("status").value;
-    const note = document.getElementById("note").value;
-    const comp_off = document.getElementById("comp_off").value;
-
-    fetch("/mark", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            date: selectedDate,
-            name,
-            status,
-            note,
-            comp_off
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert("Saved!");
-        closeForm();
-        location.reload();
-    });
-}
