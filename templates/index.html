@@ -1,6 +1,62 @@
 {% extends "base.html" %}
-{% block title %}Home - Attendance{% endblock %}
+
+{% block title %}Home - Attendance App{% endblock %}
+
 {% block content %}
-<center><h2>🏠 Welcome to Attendance Management System</h2></center>
-<center><p>Select from the menu to view or manage attendance.</p></center>
+<div class="page-header">
+    <h1>Mark Attendance</h1>
+    <p>Select your name and mark your attendance for today</p>
+</div>
+
+<div class="card">
+    <form id="attendanceForm">
+        <div class="form-group">
+            <label for="userName">Select Your Name:</label>
+            <select id="userName" name="userName" required>
+                <option value="">-- Choose --</option>
+                {% for user in users %}
+                <option value="{{ user.name }}">{{ user.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select id="status" name="status" required>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+                <option value="late">Late</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Mark Attendance</button>
+    </form>
+</div>
+
+<div id="message" class="message hidden"></div>
+
+<div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-grid">
+        <a href="/all_records" class="action-card">
+            <span class="icon">📊</span>
+            <h3>View Records</h3>
+            <p>See all attendance records</p>
+        </a>
+        <a href="/calendar" class="action-card">
+            <span class="icon">📅</span>
+            <h3>Calendar View</h3>
+            <p>View attendance by date</p>
+        </a>
+        <a href="/view_users" class="action-card">
+            <span class="icon">👥</span>
+            <h3>Manage Users</h3>
+            <p>Add or remove users</p>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 {% endblock %}
