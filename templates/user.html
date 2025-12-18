@@ -1,82 +1,62 @@
 {% extends "base.html" %}
 {% block title %}Add User{% endblock %}
+
 {% block content %}
+<h3 class="text-center mb-3">➕ Add User</h3>
 
-<center><h2>Add New User</h2></center>
-
-<div class="card p-4 mb-4">
+<div class="card p-4">
   <label>Name</label>
-  <input id="name" class="form-control">
+  <input id="name" class="form-control mb-2">
 
   <label>Email</label>
-  <input id="email" class="form-control">
+  <input id="email" class="form-control mb-2">
 
   <label>Salary</label>
-  <input id="salary" type="number" class="form-control">
+  <input id="salary" type="number" class="form-control mb-2">
 
   <label>Company</label>
-  <input id="company" class="form-control">
+  <input id="company" class="form-control mb-3">
 
-  <button class="btn btn-primary mt-3 w-100" onclick="saveUser()">Save User</button>
+  <button class="btn btn-primary w-100" onclick="saveUser()">Save User</button>
 </div>
 
-<!-- SUCCESS POPUP -->
-<div id="successMsg" class="alert alert-success text-center d-none"
-     style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-     z-index:9999;min-width:250px;">
-</div>
-
-<!-- ERROR POPUP -->
-<div id="errorMsg" class="alert alert-danger text-center d-none"
-     style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
-     z-index:9999;min-width:250px;">
-</div>
+<div id="successMsg" class="alert alert-success mt-3 d-none"></div>
+<div id="errorMsg" class="alert alert-danger mt-3 d-none"></div>
 
 <script>
-function saveUser(){
-    const data = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        salary: document.getElementById("salary").value,
-        company: document.getElementById("company").value
-    };
+function saveUser() {
+  const user = {
+    name: name.value.trim(),
+    email: email.value.trim(),
+    salary: salary.value,
+    company: company.value.trim()
+  };
 
-    fetch("/save-user", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(d => {
-        // SHOW SUCCESS POPUP
-        const success = document.getElementById("successMsg");
-        success.innerText = d.message || "User saved successfully!";
-        success.classList.remove("d-none");
+  if (!user.name) {
+    showError("Name is required");
+    return;
+  }
 
-        // HIDE ERROR IF VISIBLE
-        document.getElementById("errorMsg").classList.add("d-none");
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  users.push(user);
+  localStorage.setItem("users", JSON.stringify(users));
 
-        // RESET FORM
-        document.getElementById("name").value = "";
-        document.getElementById("email").value = "";
-        document.getElementById("salary").value = "";
-        document.getElementById("company").value = "";
+  showSuccess("User saved successfully!");
+  document.querySelectorAll("input").forEach(i => i.value = "");
+}
 
-        // AUTO HIDE AFTER 3 SECONDS (MIT FRIENDLY)
-        setTimeout(() => {
-            success.classList.add("d-none");
-        }, 3000);
-    })
-    .catch(() => {
-        const error = document.getElementById("errorMsg");
-        error.innerText = "Error saving user!";
-        error.classList.remove("d-none");
+function showSuccess(msg) {
+  const el = document.getElementById("successMsg");
+  el.textContent = msg;
+  el.classList.remove("d-none");
+  document.getElementById("errorMsg").classList.add("d-none");
+  setTimeout(() => el.classList.add("d-none"), 3000);
+}
 
-        setTimeout(() => {
-            error.classList.add("d-none");
-        }, 3000);
-    });
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.textContent = msg;
+  el.classList.remove("d-none");
 }
 </script>
-
 {% endblock %}
