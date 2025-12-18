@@ -1,39 +1,69 @@
 {% extends "base.html" %}
-{% block title %}Add User{% endblock %}
+
+{% block title %}{{ username }} - Attendance Records{% endblock %}
+
 {% block content %}
-
-<h3 class="text-center">Add User</h3>
-
-<div class="card p-4">
-  <input id="name" class="form-control mb-2" placeholder="Name">
-  <input id="email" class="form-control mb-2" placeholder="Email">
-  <input id="salary" type="number" class="form-control mb-2" placeholder="Salary">
-  <input id="company" class="form-control mb-2" placeholder="Company">
-
-  <button class="btn btn-primary w-100" onclick="saveUser()">Save</button>
+<div class="page-header">
+    <h1>{{ username }}'s Attendance</h1>
+    <p>Complete attendance history</p>
 </div>
 
-<script>
-function saveUser(){
-  const user = {
-    name: name.value.trim(),
-    email: email.value.trim(),
-    salary: salary.value,
-    company: company.value.trim()
-  };
+<div class="card">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Records</h3>
+            <p class="stat-number">{{ records|length }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Present</h3>
+            <p class="stat-number">{{ records|selectattr('status', 'equalto', 'present')|list|length }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Absent</h3>
+            <p class="stat-number">{{ records|selectattr('status', 'equalto', 'absent')|list|length }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Late</h3>
+            <p class="stat-number">{{ records|selectattr('status', 'equalto', 'late')|list|length }}</p>
+        </div>
+    </div>
+</div>
 
-  if(!user.name){
-    alert("Name required");
-    return;
-  }
+<div class="card">
+    <h2>Attendance History</h2>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if records %}
+                    {% for record in records|reverse %}
+                    <tr>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.time }}</td>
+                        <td>
+                            <span class="status-badge status-{{ record.status }}">
+                                {{ record.status|capitalize }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center">No records found</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-  let users = JSON.parse(localStorage.getItem("users")) || [];
-  users.push(user);
-  localStorage.setItem("users", JSON.stringify(users));
-
-  alert("Saved");
-  document.querySelector("form")?.reset();
-}
-</script>
-
+<div class="actions">
+    <a href="/view_users" class="btn btn-secondary">Back to Users</a>
+</div>
 {% endblock %}
