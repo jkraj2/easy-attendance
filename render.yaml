@@ -2,8 +2,13 @@ services:
   - type: web
     name: attendance-app
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+    healthCheckPath: /health
