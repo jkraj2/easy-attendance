@@ -1,70 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Add User{% endblock %}
-
 {% block content %}
-<h3 class="text-center mb-3">➕ Add User</h3>
+
+<h3 class="text-center">Add User</h3>
 
 <div class="card p-4">
+  <input id="name" class="form-control mb-2" placeholder="Name">
+  <input id="email" class="form-control mb-2" placeholder="Email">
+  <input id="salary" type="number" class="form-control mb-2" placeholder="Salary">
+  <input id="company" class="form-control mb-2" placeholder="Company">
 
-  <label>Name</label>
-  <input id="name" class="form-control mb-2">
-
-  <label>Email</label>
-  <input id="email" class="form-control mb-2">
-
-  <label>Salary</label>
-  <input id="salary" type="number" class="form-control mb-2">
-
-  <label>Company</label>
-  <input id="company" class="form-control mb-3">
-
-  <button class="btn btn-primary w-100" onclick="saveUser()">Save User</button>
-  <button class="btn btn-outline-secondary w-100 mt-2" onclick="testRead()">READ TEST</button>
-
+  <button class="btn btn-primary w-100" onclick="saveUser()">Save</button>
 </div>
 
 <script>
 function saveUser(){
-  const name = document.getElementById("name").value.trim();
+  const user = {
+    name: name.value.trim(),
+    email: email.value.trim(),
+    salary: salary.value,
+    company: company.value.trim()
+  };
 
-  if(name === ""){
-    alert("Name is required");
+  if(!user.name){
+    alert("Name required");
     return;
   }
 
-  const user = {
-    name: name,
-    email: document.getElementById("email").value,
-    salary: document.getElementById("salary").value,
-    company: document.getElementById("company").value
-  };
-
-  let users = [];
-  try {
-    users = JSON.parse(localStorage.getItem("users")) || [];
-  } catch(e){
-    users = [];
-  }
-
+  let users = JSON.parse(localStorage.getItem("users")) || [];
   users.push(user);
   localStorage.setItem("users", JSON.stringify(users));
 
-  alert("Saved");   // ✅ THIS WILL WORK IN MIT / NIOTRON
-
-  // Clear inputs
-  document.getElementById("name").value = "";
-  document.getElementById("email").value = "";
-  document.getElementById("salary").value = "";
-  document.getElementById("company").value = "";
-}
-
-function testRead(){
-  const users = JSON.parse(localStorage.getItem("users")) || [];
-  if(users.length > 0){
-    alert("WORKING");
-  } else {
-    alert("NO DATA");
-  }
+  alert("Saved");
+  document.querySelector("form")?.reset();
 }
 </script>
 
