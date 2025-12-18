@@ -2,29 +2,30 @@
 {% block title %}Attendance Calendar{% endblock %}
 
 {% block content %}
-<center><h2>📅 Attendance Calendar</h2></center>
+<center><h2 class="mb-3">📅 Attendance Calendar</h2></center>
 
 <div id="calendar"></div>
 
-<!-- Attendance Form Popup -->
+<!-- ================= Attendance Popup ================= -->
 <div id="attendancePopup" class="modal fade" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content p-3">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Mark Attendance</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
+
         <div class="mb-2">
-          <label>User:</label>
+          <label>User</label>
           <select id="popupUser" class="form-select">
             <option value="">Select User</option>
           </select>
         </div>
 
         <div class="mb-2">
-          <label>Status:</label>
+          <label>Status</label>
           <select id="popupStatus" class="form-select">
             <option>Present</option>
             <option>Absent</option>
@@ -34,7 +35,7 @@
         </div>
 
         <div class="mb-2">
-          <label>Shift:</label>
+          <label>Shift</label>
           <select id="popupShift" class="form-select">
             <option>Regular</option>
             <option>Morning</option>
@@ -44,7 +45,7 @@
         </div>
 
         <div class="mb-2">
-          <label>More Options:</label>
+          <label>More Options</label>
           <select id="popupMore" class="form-select">
             <option value="">None</option>
             <option>Holiday</option>
@@ -53,7 +54,7 @@
         </div>
 
         <div class="mb-2">
-          <label>Leave:</label>
+          <label>Leave</label>
           <select id="popupLeave" class="form-select">
             <option value="">None</option>
             <option>Privileged Leave (PL)</option>
@@ -64,14 +65,15 @@
         </div>
 
         <div class="mb-2">
-          <label>Notes:</label>
-          <textarea id="popupNotes" class="form-control" placeholder="Optional"></textarea>
+          <label>Notes</label>
+          <textarea id="popupNotes" class="form-control" rows="2"></textarea>
         </div>
 
-        <div class="mb-2">
-          <strong>Selected Details:</strong>
+        <div class="mt-2">
+          <strong>Selected Details</strong>
           <ul id="selectedDetails" class="list-group list-group-flush small"></ul>
         </div>
+
       </div>
 
       <div class="modal-footer">
@@ -81,6 +83,19 @@
     </div>
   </div>
 </div>
+
+<!-- ================= SUCCESS TOAST ================= -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div id="successToast" class="toast text-bg-success border-0">
+    <div class="d-flex">
+      <div class="toast-body" id="successToastMsg">
+        Attendance saved successfully
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -88,58 +103,64 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Fetch users for dropdown
+let calendar;
+let selectedDate = null;
+
+/* ================= Load Users ================= */
 function loadUsers() {
   fetch("/users-list")
     .then(res => res.json())
     .then(users => {
       const select = document.getElementById("popupUser");
-      select.innerHTML = `<option value="">Select User</option>`;
-      users.forEach(u => select.innerHTML += `<option value="${u.name}">${u.name}</option>`);
+      select.innerHTML = '<option value="">Select User</option>';
+      users.forEach(u => {
+        select.innerHTML += `<option value="${u.name}">${u.name}</option>`;
+      });
     });
 }
 
-// Show selected details
+/* ================= Selected Details ================= */
 function updateSelectedDetails() {
-  const details = document.getElementById("selectedDetails");
-  const user = document.getElementById("popupUser").value;
-  const status = document.getElementById("popupStatus").value;
-  const shift = document.getElementById("popupShift").value;
-  const more = document.getElementById("popupMore").value;
-  const leave = document.getElementById("popupLeave").value;
-  const notes = document.getElementById("popupNotes").value;
+  const list = document.getElementById("selectedDetails");
+  list.innerHTML = "";
 
-  details.innerHTML = '';
-  if(user) details.innerHTML += `<li>User: ${user}</li>`;
-  if(status) details.innerHTML += `<li>Status: ${status}</li>`;
-  if(shift) details.innerHTML += `<li>Shift: ${shift}</li>`;
-  if(more) details.innerHTML += `<li>More: ${more}</li>`;
-  if(leave) details.innerHTML += `<li>Leave: ${leave}</li>`;
-  if(notes) details.innerHTML += `<li>Notes: ${notes}</li>`;
+  const map = {
+    "User": popupUser.value,
+    "Status": popupStatus.value,
+    "Shift": popupShift.value,
+    "More": popupMore.value,
+    "Leave": popupLeave.value,
+    "Notes": popupNotes.value
+  };
+
+  Object.entries(map).forEach(([k,v])=>{
+    if(v) list.innerHTML += `<li class="list-group-item">${k}: ${v}</li>`;
+  });
 }
 
-// Attach event listeners
-["popupUser","popupStatus","popupShift","popupMore","popupLeave","popupNotes"].forEach(id=>{
+["popupUser","popupStatus","popupShift","popupMore","popupLeave","popupNotes"]
+.forEach(id=>{
   document.getElementById(id).addEventListener("change", updateSelectedDetails);
   document.getElementById(id).addEventListener("input", updateSelectedDetails);
 });
 
-// Submit attendance
+/* ================= Submit Attendance ================= */
 function submitAttendance() {
-  const data = {
-    name: document.getElementById("popupUser").value,
-    status: document.getElementById("popupStatus").value,
-    shift: document.getElementById("popupShift").value,
-    moreOptions: document.getElementById("popupMore").value,
-    leave: document.getElementById("popupLeave").value,
-    note: document.getElementById("popupNotes").value,
-    date: selectedDate
-  };
 
-  if(!data.name){
-    alert("Please select a user!");
+  if(!popupUser.value){
+    alert("Please select user");
     return;
   }
+
+  const data = {
+    name: popupUser.value,
+    status: popupStatus.value,
+    shift: popupShift.value,
+    moreOptions: popupMore.value,
+    leave: popupLeave.value,
+    note: popupNotes.value,
+    date: selectedDate
+  };
 
   fetch("/mark", {
     method: "POST",
@@ -148,30 +169,38 @@ function submitAttendance() {
   })
   .then(res => res.json())
   .then(d => {
-    alert(d.message);
+
+    // Success toast
+    successToastMsg.innerText = d.message || "Attendance saved successfully";
+    new bootstrap.Toast(successToast).show();
+
+    // Refresh calendar
     calendar.refetchEvents();
-    bootstrap.Modal.getInstance(document.getElementById("attendancePopup")).hide();
+
+    // Close modal
+    bootstrap.Modal.getInstance(attendancePopup).hide();
+
+    // Reset form
+    popupUser.value="";
+    popupNotes.value="";
+    updateSelectedDetails();
   });
 }
 
-// FullCalendar setup
-let calendar;
-let selectedDate = null;
+/* ================= Calendar ================= */
 document.addEventListener("DOMContentLoaded", function() {
+
   loadUsers();
 
-  const calendarEl = document.getElementById('calendar');
-  calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth',
-    height: 'auto',
-    selectable: true,
+  calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+    initialView: "dayGridMonth",
+    height: "auto",
     dateClick: function(info){
       selectedDate = info.dateStr;
-      const modal = new bootstrap.Modal(document.getElementById("attendancePopup"));
-      modal.show();
+      new bootstrap.Modal(attendancePopup).show();
       updateSelectedDetails();
     },
-    events: '/events'
+    events: "/events"
   });
 
   calendar.render();
