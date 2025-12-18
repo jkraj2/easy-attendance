@@ -1,108 +1,47 @@
-Privacy Policy for My Easy Attendance
+{% extends "base.html" %}
 
-Effective Date: [Add Date]
+{% block title %}Privacy Policy - Attendance App{% endblock %}
 
-My Easy Attendance (“we”, “our”, or “us”) values your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our mobile application My Easy Attendance and related services.
+{% block content %}
+<div class="page-header">
+    <h1>Privacy Policy</h1>
+    <p>Last updated: December 2024</p>
+</div>
 
-By using the app, you agree to the collection and use of information in accordance with this policy.
+<div class="card content-card">
+    <h2>Introduction</h2>
+    <p>This Attendance App is designed to help track attendance records locally. We respect your privacy and are committed to protecting your personal information.</p>
 
-1. Information We Collect
-a. Personal Information
+    <h2>Data Collection</h2>
+    <p>We collect the following information:</p>
+    <ul>
+        <li>User names and email addresses (if provided)</li>
+        <li>Attendance records including date, time, and status</li>
+    </ul>
 
-We may collect the following information when you register or use the app:
+    <h2>Data Storage</h2>
+    <p>All data is stored locally on the server and is not shared with third parties. Data may be lost during server restarts or redeployments on free hosting tiers.</p>
 
-Name
+    <h2>Data Usage</h2>
+    <p>Your data is used solely for:</p>
+    <ul>
+        <li>Tracking attendance records</li>
+        <li>Generating attendance reports</li>
+        <li>Identifying users within the system</li>
+    </ul>
 
-Email address
+    <h2>Data Security</h2>
+    <p>We implement reasonable security measures to protect your data. However, please note that no system is completely secure.</p>
 
-Phone number (if provided)
+    <h2>Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+        <li>Access your attendance records</li>
+        <li>Request deletion of your data</li>
+        <li>Update your information</li>
+    </ul>
 
-User role (student, teacher, admin, employee)
-
-b. Attendance Data
-
-Check-in and check-out time
-
-Attendance status (present, absent, late, leave)
-
-Records associated with users or groups
-
-c. Device & Usage Information
-
-Device type
-
-Operating system
-
-App usage data (for performance and improvement)
-
-2. How We Use Your Information
-
-We use the collected information to:
-
-Provide and maintain the attendance tracking service
-
-Manage users and attendance records
-
-Improve app performance and user experience
-
-Generate attendance reports
-
-Communicate important updates or support messages
-
-Ensure security and prevent misuse
-
-3. Data Sharing & Disclosure
-
-We do not sell, trade, or rent your personal data.
-
-We may share data only:
-
-When required by law
-
-To comply with legal obligations
-
-To protect the rights, safety, or security of users and the app
-
-With trusted service providers strictly for app functionality (under confidentiality)
-
-4. Data Storage & Security
-
-All data is stored securely using industry-standard security measures
-
-We take reasonable steps to protect your data from unauthorized access, loss, or misuse
-
-However, no method of electronic storage is 100% secure
-
-5. User Rights
-
-You have the right to:
-
-Access your personal data
-
-Request correction of incorrect data
-
-Request deletion of your data (subject to legal requirements)
-
-Withdraw consent by discontinuing app usage
-
-For data requests, please contact us using the details below.
-
-6. Children’s Privacy
-
-My Easy Attendance does not knowingly collect personal information from children under the age of 13 without parental or institutional consent. If you believe such data has been collected, please contact us immediately.
-
-7. Third-Party Services
-
-The app may use third-party services (such as hosting or analytics) that may collect information used to identify you. These services have their own privacy policies.
-
-8. Changes to This Privacy Policy
-
-We may update this Privacy Policy from time to time.
-Any changes will be posted on this page with an updated effective date.
-
-9. Contact Us
-
-If you have any questions or concerns about this Privacy Policy, please contact us:
-
-📧 Email: jkrajbher@gmail.com
-🌐 Website: https://easy-attendance-llp6.onrender.com
+    <h2>Contact</h2>
+    <p>If you have any questions about this privacy policy or your data, please contact the system administrator.</p>
+</div>
+{% endblock %}
