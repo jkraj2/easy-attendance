@@ -1,92 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Calendar{% endblock %}
+
+{% block title %}Calendar View - Attendance App{% endblock %}
+
 {% block content %}
-
-<h3 class="text-center">Attendance Calendar</h3>
-<div id="calendar"></div>
-
-<!-- Popup -->
-<div class="modal fade" id="attendancePopup">
-  <div class="modal-dialog">
-    <div class="modal-content p-3">
-
-      <select id="popupUser" class="form-select mb-2"></select>
-      <select id="popupStatus" class="form-select mb-2">
-        <option>Present</option>
-        <option>Absent</option>
-        <option>Half-Day</option>
-      </select>
-
-      <textarea id="popupNotes" class="form-control mb-2" placeholder="Notes"></textarea>
-
-      <button class="btn btn-success w-100" onclick="saveAttendance()">Save</button>
-    </div>
-  </div>
+<div class="page-header">
+    <h1>Calendar View</h1>
+    <p>View attendance records by date</p>
 </div>
 
+<div class="card">
+    <div id="calendar"></div>
+</div>
+
+<div class="card" id="dayRecords" style="display: none;">
+    <h2>Records for <span id="selectedDate"></span></h2>
+    <div id="recordsList"></div>
+</div>
 {% endblock %}
 
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
+{% block extra_js %}
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
 <script>
-let selectedDate;
-let calendar;
-
-// Load users
-function loadUsers(){
-  const users = JSON.parse(localStorage.getItem("users")) || [];
-  popupUser.innerHTML = '<option value="">Select User</option>';
-  users.forEach(u=>{
-    popupUser.innerHTML += `<option>${u.name}</option>`;
-  });
-}
-
-function saveAttendance(){
-  if(!popupUser.value){
-    alert("Select user");
-    return;
-  }
-
-  const record = {
-    date: selectedDate,
-    name: popupUser.value,
-    status: popupStatus.value,
-    note: popupNotes.value
-  };
-
-  let data = JSON.parse(localStorage.getItem("attendance")) || [];
-  data.push(record);
-  localStorage.setItem("attendance", JSON.stringify(data));
-
-  alert("Saved");
-  bootstrap.Modal.getInstance(attendancePopup).hide();
-  calendar.refetchEvents();
-}
-
-document.addEventListener("DOMContentLoaded", ()=>{
-  loadUsers();
-
-  calendar = new FullCalendar.Calendar(calendar, {
-    initialView: "dayGridMonth",
-
-    events: (info, success)=>{
-      const data = JSON.parse(localStorage.getItem("attendance")) || [];
-      success(data.map(r=>({
-        title: `${r.name} - ${r.status}`,
-        start: r.date
-      })));
-    },
-
-    dateClick: info=>{
-      selectedDate = info.dateStr;
-      popupNotes.value = "";
-      new bootstrap.Modal(attendancePopup).show();
-    }
-  });
-
-  calendar.render();
-});
+    const records = {{ records|tojson }};
+    initCalendar(records);
 </script>
 {% endblock %}
