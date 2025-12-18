@@ -8,11 +8,13 @@
     <p>Add or remove users from the system</p>
 </div>
 
+<div id="message" class="message hidden"></div>
+
 <div class="card">
     <h2>Add New User</h2>
     <form id="addUserForm">
         <div class="form-group">
-            <label for="newUserName">Name:</label>
+            <label for="newUserName">Name: *</label>
             <input type="text" id="newUserName" name="name" required placeholder="Enter user name">
         </div>
         <div class="form-group">
@@ -24,11 +26,11 @@
 </div>
 
 <div class="card">
-    <h2>Current Users</h2>
+    <h2>Current Users (<span id="userCount">{{ users|length }}</span>)</h2>
     <div class="users-grid" id="usersList">
         {% if users %}
             {% for user in users %}
-            <div class="user-card">
+            <div class="user-card" data-user="{{ user.name }}">
                 <div class="user-info">
                     <h3>{{ user.name }}</h3>
                     {% if user.email %}
@@ -44,21 +46,27 @@
             </div>
             {% endfor %}
         {% else %}
-            <p class="text-center">No users found. Add your first user above!</p>
+            <p class="text-center" id="noUsersMessage">No users found. Add your first user above!</p>
         {% endif %}
     </div>
 </div>
-
-<div id="message" class="message hidden"></div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// Add User Form Handler
 document.getElementById('addUserForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const name = document.getElementById('newUserName').value;
-    const email = document.getElementById('newUserEmail').value;
+    const nameInput = document.getElementById('newUserName');
+    const emailInput = document.getElementById('newUserEmail');
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    
+    if (!name) {
+        showMessage('Please enter a name', 'error');
+        return;
+    }
     
     try {
         const response = await fetch('/add_user', {
@@ -73,17 +81,41 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
         
         if (data.success) {
             showMessage('User added successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
+            
+            // Add user to the list dynamically
+            const usersList = document.getElementById('usersList');
+            const noUsersMessage = document.getElementById('noUsersMessage');
+            
+            if (noUsersMessage) {
+                noUsersMessage.remove();
+            }
+            
+            const userCard = createUserCard(data.user);
+            usersList.insertAdjacentHTML('beforeend', userCard);
+            
+            // Update count
+            const userCount = document.getElementById('userCount');
+            userCount.textContent = parseInt(userCount.textContent) + 1;
+            
+            // Reset form
+            nameInput.value = '';
+            emailInput.value = '';
+            nameInput.focus();
+            
         } else {
-            showMessage(data.message, 'error');
+            showMessage(data.message || 'Error adding user', 'error');
         }
     } catch (error) {
-        showMessage('Error adding user', 'error');
+        console.error('Error:', error);
+        showMessage('Error adding user. Please try again.', 'error');
     }
 });
 
+// Delete User Function
 async function deleteUser(name) {
-    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+    if (!confirm(`Are you sure you want to delete ${name}?`)) {
+        return;
+    }
     
     try {
         const response = await fetch('/delete_user', {
@@ -98,15 +130,53 @@ async function deleteUser(name) {
         
         if (data.success) {
             showMessage('User deleted successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
+            
+            // Remove user card from DOM
+            const userCard = document.querySelector(`[data-user="${name}"]`);
+            if (userCard) {
+                userCard.remove();
+            }
+            
+            // Update count
+            const userCount = document.getElementById('userCount');
+            const newCount = parseInt(userCount.textContent) - 1;
+            userCount.textContent = newCount;
+            
+            // Show "no users" message if list is empty
+            if (newCount === 0) {
+                const usersList = document.getElementById('usersList');
+                usersList.innerHTML = '<p class="text-center" id="noUsersMessage">No users found. Add your first user above!</p>';
+            }
+            
         } else {
-            showMessage('Error deleting user', 'error');
+            showMessage(data.message || 'Error deleting user', 'error');
         }
     } catch (error) {
-        showMessage('Error deleting user', 'error');
+        console.error('Error:', error);
+        showMessage('Error deleting user. Please try again.', 'error');
     }
 }
 
+// Helper function to create user card HTML
+function createUserCard(user) {
+    const emailHTML = user.email ? `<p class="user-email">${user.email}</p>` : '';
+    return `
+        <div class="user-card" data-user="${user.name}">
+            <div class="user-info">
+                <h3>${user.name}</h3>
+                ${emailHTML}
+            </div>
+            <div class="user-actions">
+                <a href="/user/${user.name}" class="btn btn-small">View Records</a>
+                <button class="btn btn-small btn-danger" onclick="deleteUser('${user.name}')">
+                    Delete
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Show Message Function
 function showMessage(text, type) {
     const messageDiv = document.getElementById('message');
     messageDiv.textContent = text;
