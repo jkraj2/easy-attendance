@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+<button onclick="save()">SAVE</button>
+<button onclick="read()">READ</button>
+
+<script>
+function save(){
+  localStorage.setItem("test","WORKING");
+  alert("Saved");
+}
+function read(){
+  alert(localStorage.getItem("test"));
+}
+</script>
+</body>
+</html>
