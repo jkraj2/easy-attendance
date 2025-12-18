@@ -5,23 +5,317 @@
 {% block content %}
 <div class="page-header">
     <h1>Calendar View</h1>
-    <p>View attendance records by date</p>
+    <p>View and mark attendance by date</p>
 </div>
 
 <div class="card">
+    <div class="calendar-controls">
+        <button id="prevMonth" class="btn btn-secondary">← Previous</button>
+        <h2 id="currentMonthYear"></h2>
+        <button id="nextMonth" class="btn btn-secondary">Next →</button>
+    </div>
     <div id="calendar"></div>
 </div>
 
-<div class="card" id="dayRecords" style="display: none;">
-    <h2>Records for <span id="selectedDate"></span></h2>
+<div class="card" id="dayRecordsCard" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>Records for <span id="selectedDate"></span></h2>
+        <button id="markAttendanceBtn" class="btn btn-primary">+ Mark Attendance</button>
+    </div>
+    
+    <!-- Mark Attendance Form -->
+    <div id="markAttendanceForm" style="display: none; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-color); border-radius: 0.375rem;">
+        <h3>Mark Attendance for <span id="formDate"></span></h3>
+        <form id="quickAttendanceForm">
+            <div class="form-group">
+                <label for="quickUserName">Select Name:</label>
+                <select id="quickUserName" required>
+                    <option value="">-- Choose --</option>
+                    {% for user in users %}
+                    <option value="{{ user.name }}">{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="quickStatus">Status:</label>
+                <select id="quickStatus" required>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="late">Late</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" onclick="hideAttendanceForm()">Cancel</button>
+            </div>
+        </form>
+    </div>
+    
     <div id="recordsList"></div>
 </div>
+
+<div id="message" class="message hidden"></div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='calendar.js') }}"></script>
 <script>
-    const records = {{ records|tojson }};
-    initCalendar(records);
+const allRecords = {{ records|tojson }};
+const allUsers = {{ users|tojson }};
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let selectedDateForForm = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderCalendar();
+    
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    });
+    
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar();
+    });
+    
+    document.getElementById('markAttendanceBtn').addEventListener('click', showAttendanceForm);
+    
+    document.getElementById('quickAttendanceForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('quickUserName').value;
+        const status = document.getElementById('quickStatus').value;
+        
+        try {
+            const response = await fetch('/mark_attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, status })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showMessage('Attendance marked successfully!', 'success');
+                
+                // Reload to show updated data
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showMessage(data.message || 'Error marking attendance', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage('Error marking attendance', 'error');
+        }
+    });
+});
+
+function renderCalendar() {
+    const calendar = document.getElementById('calendar');
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    document.getElementById('currentMonthYear').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    
+    // Group records by date
+    const recordsByDate = {};
+    allRecords.forEach(record => {
+        const date = record.date;
+        if (!recordsByDate[date]) {
+            recordsByDate[date] = [];
+        }
+        recordsByDate[date].push(record);
+    });
+    
+    let html = '<div class="calendar-grid">';
+    html += '<div class="calendar-day-header">Sun</div>';
+    html += '<div class="calendar-day-header">Mon</div>';
+    html += '<div class="calendar-day-header">Tue</div>';
+    html += '<div class="calendar-day-header">Wed</div>';
+    html += '<div class="calendar-day-header">Thu</div>';
+    html += '<div class="calendar-day-header">Fri</div>';
+    html += '<div class="calendar-day-header">Sat</div>';
+    
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) {
+        html += '<div class="calendar-day empty"></div>';
+    }
+    
+    // Days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const hasRecords = recordsByDate[dateStr] && recordsByDate[dateStr].length > 0;
+        const isToday = dateStr === todayStr;
+        
+        html += `<div class="calendar-day ${hasRecords ? 'has-records' : ''} ${isToday ? 'today' : ''}" onclick="showDayRecords('${dateStr}')">`;
+        html += `<div class="day-number">${day}</div>`;
+        if (hasRecords) {
+            html += `<div class="record-count">${recordsByDate[dateStr].length}</div>`;
+        }
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    calendar.innerHTML = html;
+}
+
+function showDayRecords(date) {
+    selectedDateForForm = date;
+    const records = allRecords.filter(r => r.date === date);
+    const card = document.getElementById('dayRecordsCard');
+    const selectedDateSpan = document.getElementById('selectedDate');
+    const recordsList = document.getElementById('recordsList');
+    
+    selectedDateSpan.textContent = formatDate(date);
+    
+    if (records.length === 0) {
+        recordsList.innerHTML = '<p class="text-center" style="color: var(--text-secondary);">No records for this date. Click "Mark Attendance" to add one.</p>';
+    } else {
+        let html = '<div class="table-responsive"><table>';
+        html += '<thead><tr><th>Name</th><th>Status</th><th>Time</th></tr></thead>';
+        html += '<tbody>';
+        
+        records.forEach(record => {
+            html += '<tr>';
+            html += `<td>${record.name}</td>`;
+            html += `<td><span class="status-badge status-${record.status}">${capitalize(record.status)}</span></td>`;
+            html += `<td>${record.time}</td>`;
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+        recordsList.innerHTML = html;
+    }
+    
+    card.style.display = 'block';
+    document.getElementById('markAttendanceForm').style.display = 'none';
+}
+
+function showAttendanceForm() {
+    const form = document.getElementById('markAttendanceForm');
+    const formDateSpan = document.getElementById('formDate');
+    
+    if (selectedDateForForm) {
+        formDateSpan.textContent = formatDate(selectedDateForForm);
+        form.style.display = 'block';
+    }
+}
+
+function hideAttendanceForm() {
+    document.getElementById('markAttendanceForm').style.display = 'none';
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function showMessage(text, type) {
+    const messageDiv = document.getElementById('message');
+    messageDiv.textContent = text;
+    messageDiv.className = `message ${type}`;
+    messageDiv.classList.remove('hidden');
+    
+    setTimeout(() => {
+        messageDiv.classList.add('hidden');
+    }, 3000);
+}
 </script>
+
+<style>
+.calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    padding: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 60px;
+}
+
+.calendar-day:hover:not(.empty) {
+    background: var(--bg-color);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.calendar-day.empty {
+    border: none;
+    cursor: default;
+}
+
+.calendar-day.empty:hover {
+    background: transparent;
+    transform: none;
+}
+
+.calendar-day.today {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.1);
+    font-weight: 600;
+}
+
+.calendar-day.has-records {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+}
+
+.day-number {
+    font-weight: 600;
+}
+
+.record-count {
+    font-size: 0.75rem;
+    color: var(--success-color);
+    font-weight: 600;
+    text-align: right;
+}
+</style>
 {% endblock %}
