@@ -1,18 +1,121 @@
 {% extends "base.html" %}
-{% block title %}All Users{% endblock %}
+
+{% block title %}Manage Users - Attendance App{% endblock %}
+
 {% block content %}
-<center><h2>👥 All Users</h2></center>
-<table class="table table-striped mt-3">
-<thead class="table-primary"><tr><th>Name</th><th>Email</th><th>Salary</th><th>Company</th></tr></thead>
-<tbody>
-{% for u in users %}
-<tr>
-<td>{{ u.name }}</td>
-<td>{{ u.email }}</td>
-<td>{{ u.salary }}</td>
-<td>{{ u.company }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
+<div class="page-header">
+    <h1>Manage Users</h1>
+    <p>Add or remove users from the system</p>
+</div>
+
+<div class="card">
+    <h2>Add New User</h2>
+    <form id="addUserForm">
+        <div class="form-group">
+            <label for="newUserName">Name:</label>
+            <input type="text" id="newUserName" name="name" required placeholder="Enter user name">
+        </div>
+        <div class="form-group">
+            <label for="newUserEmail">Email (optional):</label>
+            <input type="email" id="newUserEmail" name="email" placeholder="user@example.com">
+        </div>
+        <button type="submit" class="btn btn-primary">Add User</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Current Users</h2>
+    <div class="users-grid" id="usersList">
+        {% if users %}
+            {% for user in users %}
+            <div class="user-card">
+                <div class="user-info">
+                    <h3>{{ user.name }}</h3>
+                    {% if user.email %}
+                    <p class="user-email">{{ user.email }}</p>
+                    {% endif %}
+                </div>
+                <div class="user-actions">
+                    <a href="/user/{{ user.name }}" class="btn btn-small">View Records</a>
+                    <button class="btn btn-small btn-danger" onclick="deleteUser('{{ user.name }}')">
+                        Delete
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center">No users found. Add your first user above!</p>
+        {% endif %}
+    </div>
+</div>
+
+<div id="message" class="message hidden"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('newUserName').value;
+    const email = document.getElementById('newUserEmail').value;
+    
+    try {
+        const response = await fetch('/add_user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('User added successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    } catch (error) {
+        showMessage('Error adding user', 'error');
+    }
+});
+
+async function deleteUser(name) {
+    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+    
+    try {
+        const response = await fetch('/delete_user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('User deleted successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage('Error deleting user', 'error');
+        }
+    } catch (error) {
+        showMessage('Error deleting user', 'error');
+    }
+}
+
+function showMessage(text, type) {
+    const messageDiv = document.getElementById('message');
+    messageDiv.textContent = text;
+    messageDiv.className = `message ${type}`;
+    messageDiv.classList.remove('hidden');
+    
+    setTimeout(() => {
+        messageDiv.classList.add('hidden');
+    }, 3000);
+}
+</script>
 {% endblock %}
