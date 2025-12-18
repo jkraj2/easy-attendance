@@ -1,36 +1,52 @@
 {% extends "base.html" %}
-{% block title %}View Attendance{% endblock %}
+
+{% block title %}View Records - Attendance App{% endblock %}
+
 {% block content %}
+<div class="page-header">
+    <h1>View Records</h1>
+    <p>Quick view of attendance data</p>
+</div>
 
-<h3 class="text-center">Attendance Records</h3>
-
-<table class="table table-bordered">
-  <thead>
-    <tr>
-      <th>Date</th><th>Name</th><th>Status</th><th>Notes</th>
-    </tr>
-  </thead>
-  <tbody id="tableBody"></tbody>
-</table>
-
-<script>
-document.addEventListener("DOMContentLoaded", ()=>{
-  const data = JSON.parse(localStorage.getItem("attendance")) || [];
-  if(data.length === 0){
-    tableBody.innerHTML = "<tr><td colspan='4'>No Data</td></tr>";
-    return;
-  }
-
-  data.forEach(r=>{
-    tableBody.innerHTML += `
-      <tr>
-        <td>${r.date}</td>
-        <td>${r.name}</td>
-        <td>${r.status}</td>
-        <td>${r.note || "-"}</td>
-      </tr>`;
-  });
-});
-</script>
-
+<div class="card">
+    <h2>Recent Attendance</h2>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if records %}
+                    {% for record in records|reverse|slice(10) %}
+                    <tr>
+                        <td>{{ record.name }}</td>
+                        <td>
+                            <span class="status-badge status-{{ record.status }}">
+                                {{ record.status|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.time }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center">No records found</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if records|length > 10 %}
+    <div style="margin-top: 1rem; text-align: center;">
+        <a href="/all_records" class="btn btn-primary">View All {{ records|length }} Records</a>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
