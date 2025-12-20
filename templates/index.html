@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Attendance App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f9fafb;
+            --card: #ffffff;
+            --text: #111827;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            padding: 1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--card);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-light);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Card */
+        .card {
+            background: var(--card);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            background: white;
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: var(--primary-dark);
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* Message */
+        .message {
+            padding: 0.875rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Users List */
+        .users-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 0.375rem;
+            border: 1px solid var(--border);
+        }
+
+        .user-info h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-info p {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Records Table */
+        .records-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .record-item {
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 0.375rem;
+            border-left: 4px solid var(--success);
+        }
+
+        .record-item.absent {
+            border-left-color: var(--danger);
+        }
+
+        .record-item.late {
+            border-left-color: var(--warning);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .record-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-present {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-absent {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-late {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .record-info {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        /* Calendar */
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-controls button {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+
+        .calendar-month {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.25rem;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem;
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .calendar-day.empty {
+            border: none;
+            cursor: default;
+        }
+
+        .calendar-day.today {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .calendar-day.has-records {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+        }
+
+        .calendar-day.has-records::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Search */
+        .search-box {
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-light);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Attendance App</h1>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('mark')">Mark</button>
+            <button class="tab" onclick="showTab('calendar')">Calendar</button>
+            <button class="tab" onclick="showTab('records')">Records</button>
+            <button class="tab" onclick="showTab('users')">Users</button>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <!-- Mark Attendance Tab -->
+        <div id="mark-tab" class="tab-content active">
+            <div class="card">
+                <h2>Mark Attendance</h2>
+                <form id="attendanceForm">
+                    <div class="form-group">
+                        <label for="userName">Select Name</label>
+                        <select id="userName" required>
+                            <option value="">-- Choose --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" required>
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">✓ Mark Attendance</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Today's Summary</h2>
+                <div class="stats-grid" id="todayStats">
+                    <div class="stat-card">
+                        <div class="stat-label">Present</div>
+                        <div class="stat-value" id="todayPresent">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Absent</div>
+                        <div class="stat-value" id="todayAbsent">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Late</div>
+                        <div class="stat-value" id="todayLate">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total</div>
+                        <div class="stat-value" id="todayTotal">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Tab -->
+        <div id="calendar-tab" class="tab-content">
+            <div class="card">
+                <div class="calendar-controls">
+                    <button onclick="changeMonth(-1)">← Prev</button>
+                    <div class="calendar-month" id="calendarMonth"></div>
+                    <button onclick="changeMonth(1)">Next →</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <div id="dayRecordsCard" style="display: none;">
+                <div class="card">
+                    <h2 id="selectedDateTitle"></h2>
+                    <div id="dayRecordsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Tab -->
+        <div id="records-tab" class="tab-content">
+            <div class="search-box">
+                <input type="text" id="searchRecords" placeholder="Search by name...">
+            </div>
+
+            <div class="card">
+                <h2>All Records (<span id="recordsCount">0</span>)</h2>
+                <div class="records-list" id="recordsList"></div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users-tab" class="tab-content">
+            <div class="card">
+                <h2>Add User</h2>
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="newUserName">Name</label>
+                        <input type="text" id="newUserName" required placeholder="Enter name">
+                    </div>
+                    <div class="form-group">
+                        <label for="newUserEmail">Email (optional)</label>
+                        <input type="email" id="newUserEmail" placeholder="user@example.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary">+ Add User</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Users (<span id="usersCount">0</span>)</h2>
+                <div class="users-list" id="usersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage Manager with version control
+        const STORAGE_VERSION = '1.0';
+        const STORAGE_KEYS = {
+            users: 'attendance_users_v1',
+            records: 'attendance_records_v1',
+            version: 'attendance_version'
+        };
+
+        // Initialize or migrate data
+        function initStorage() {
+            const version = localStorage.getItem(STORAGE_KEYS.version);
+            
+            if (!version || version !== STORAGE_VERSION) {
+                // First time or version mismatch - migrate if needed
+                migrateData(version);
+                localStorage.setItem(STORAGE_KEYS.version, STORAGE_VERSION);
+            }
+
+            // Initialize with sample data if empty
+            if (!localStorage.getItem(STORAGE_KEYS.users)) {
+                const sampleUsers = [
+                    { name: 'John Doe', email: 'john@example.com', created: new Date().toISOString() },
+                    { name: 'Jane Smith', email: 'jane@example.com', created: new Date().toISOString() }
+                ];
+                localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(sampleUsers));
+            }
+
+            if (!localStorage.getItem(STORAGE_KEYS.records)) {
+                localStorage.setItem(STORAGE_KEYS.records, JSON.stringify([]));
+            }
+        }
+
+        // Migrate data from old version to new (if structure changes)
+        function migrateData(oldVersion) {
+            // If old version exists, migrate data
+            if (oldVersion) {
+                // Example: If you had old keys, migrate them
+                const oldUsers = localStorage.getItem('users');
+                const oldRecords = localStorage.getItem('records');
+                
+                if (oldUsers) {
+                    localStorage.setItem(STORAGE_KEYS.users, oldUsers);
+                    localStorage.removeItem('users');
+                }
+                
+                if (oldRecords) {
+                    localStorage.setItem(STORAGE_KEYS.records, oldRecords);
+                    localStorage.removeItem('records');
+                }
+            }
+        }
+
+        // Data operations
+        function getUsers() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]');
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+        }
+
+        function getRecords() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEYS.records) || '[]');
+        }
+
+        function saveRecords(records) {
+            localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(records));
+        }
+
+        // Current state
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // Initialize
+        initStorage();
+        loadUsers();
+        updateTodayStats();
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            if (tabName === 'calendar') renderCalendar();
+            if (tabName === 'records') loadRecords();
+            if (tabName === 'users') loadUsersList();
+        }
+
+        // Load users into dropdown
+        function loadUsers() {
+            const users = getUsers();
+            const select = document.getElementById('userName');
+            select.innerHTML = '<option value="">-- Choose --</option>';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.name;
+                option.textContent = user.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Mark Attendance
+        document.getElementById('attendanceForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('userName').value;
+            const status = document.getElementById('status').value;
+            
+            const record = {
+                name,
+                status,
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString(),
+                timestamp: new Date().toISOString()
+            };
+            
+            const records = getRecords();
+            records.push(record);
+            saveRecords(records);
+            
+            showMessage('Attendance marked successfully!', 'success');
+            document.getElementById('attendanceForm').reset();
+            updateTodayStats();
+        });
+
+        // Update today's stats
+        function updateTodayStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const records = getRecords().filter(r => r.date === today);
+            
+            const present = records.filter(r => r.status === 'present').length;
+            const absent = records.filter(r => r.status === 'absent').length;
+            const late = records.filter(r => r.status === 'late').length;
+            
+            document.getElementById('todayPresent').textContent = present;
+            document.getElementById('todayAbsent').textContent = absent;
+            document.getElementById('todayLate').textContent = late;
+            document.getElementById('todayTotal').textContent = records.length;
+        }
+
+        // Calendar
+        function renderCalendar() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('calendarMonth').textContent = 
+                monthNames[currentMonth] + ' ' + currentYear;
+            
+            const records = getRecords();
+            const recordsByDate = {};
+            records.forEach(r => {
+                if (!recordsByDate[r.date]) recordsByDate[r.date] = [];
+                recordsByDate[r.date].push(r);
+            });
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = `
+                <div class="calendar-day-header">S</div>
+                <div class="calendar-day-header">M</div>
+                <div class="calendar-day-header">T</div>
+                <div class="calendar-day-header">W</div>
+                <div class="calendar-day-header">T</div>
+                <div class="calendar-day-header">F</div>
+                <div class="calendar-day-header">S</div>
+            `;
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date().toISOString().split('T')[0];
+            
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += '<div class="calendar-day empty"></div>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasRecords = recordsByDate[dateStr] && recordsByDate[dateStr].length > 0;
+                const isToday = dateStr === today;
+                
+                grid.innerHTML += `
+                    <div class="calendar-day ${hasRecords ? 'has-records' : ''} ${isToday ? 'today' : ''}" 
+                         onclick="showDayRecords('${dateStr}')">
+                        ${day}
+                    </div>
+                `;
+            }
+        }
+
+        function changeMonth(dir) {
+            currentMonth += dir;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function showDayRecords(date) {
+            const records = getRecords().filter(r => r.date === date);
+            const card = document.getElementById('dayRecordsCard');
+            const title = document.getElementById('selectedDateTitle');
+            const list = document.getElementById('dayRecordsList');
+            
+            title.textContent = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            
+            if (records.length === 0) {
+                list.innerHTML = '<div class="empty-state">No records for this date</div>';
+            } else {
+                list.innerHTML = records.map(r => `
+                    <div class="record-item ${r.status}">
+                        <div class="record-header">
+                            <div class="record-name">${r.name}</div>
+                            <div class="status-badge status-${r.status}">${r.status}</div>
+                        </div>
+                        <div class="record-info">
+                            <span>🕐 ${r.time}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            card.style.display = 'block';
+        }
+
+        // Load Records
+        function loadRecords() {
+            const records = getRecords().reverse();
+            const list = document.getElementById('recordsList');
+            
+            document.getElementById('recordsCount').textContent = records.length;
+            
+            if (records.length === 0) {
+                list.innerHTML = '<div class="empty-state">No records yet. Mark your first attendance!</div>';
+                return;
+            }
+            
+            list.innerHTML = records.map(r => `
+                <div class="record-item ${r.status}">
+                    <div class="record-header">
+                        <div class="record-name">${r.name}</div>
+                        <div class="status-badge status-${r.status}">${r.status}</div>
+                    </div>
+                    <div class="record-info">
+                        <span>📅 ${r.date}</span>
+                        <span>🕐 ${r.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Search Records
+        document.getElementById('searchRecords').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const records = getRecords().reverse().filter(r => 
+                r.name.toLowerCase().includes(term)
+            );
+            
+            const list = document.getElementById('recordsList');
+            list.innerHTML = records.map(r => `
+                <div class="record-item ${r.status}">
+                    <div class="record-header">
+                        <div class="record-name">${r.name}</div>
+                        <div class="status-badge status-${r.status}">${r.status}</div>
+                    </div>
+                    <div class="record-info">
+                        <span>📅 ${r.date}</span>
+                        <span>🕐 ${r.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        });
+
+        // Add User
+        document.getElementById('userForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('newUserName').value.trim();
+            const email = document.getElementById('newUserEmail').value.trim();
+            
+            const users = getUsers();
+            
+            if (users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+                showMessage('User already exists!', 'error');
+                return;
+            }
+            
+            users.push({
+                name,
+                email,
+                created: new Date().toISOString()
+            });
+            
+            saveUsers(users);
+            showMessage('User added successfully!', 'success');
+            document.getElementById('userForm').reset();
+            loadUsers();
+            loadUsersList();
+        });
+
+        // Load Users List
+        function loadUsersList() {
+            const users = getUsers();
+            const list = document.getElementById('usersList');
+            
+            document.getElementById('usersCount').textContent = users.length;
+            
+            if (users.length === 0) {
+                list.innerHTML = '<div class="empty-state">No users yet. Add your first user!</div>';
+                return;
+            }
+            
+            list.innerHTML = users.map(u => `
+                <div class="user-item">
+                    <div class="user-info">
+                        <h3>${u.name}</h3>
+                        ${u.email ? `<p>${u.email}</p>` : ''}
+                    </div>
+                    <button class="btn btn-small btn-danger" onclick="deleteUser('${u.name}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteUser(name) {
+            if (!confirm(`Delete ${name}?`)) return;
+            
+            let users = getUsers();
+            users = users.filter(u => u.name !== name);
+            saveUsers(users);
+            
+            showMessage('User deleted!', 'success');
+            loadUsers();
+            loadUsersList();
+        }
+
+        // Show Message
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type} show`;
+            
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
